@@ -3,7 +3,7 @@
 import { ChevronLeft, ChevronRight, Folder, Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -17,12 +17,6 @@ export function ProjectSidebar({ projects }: { projects: ProjectSummary[] }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const selectedProjectId = searchParams.get("project");
-
-  useEffect(() => {
-    if (pathname.includes("/editor")) {
-      setIsOpen(false);
-    }
-  }, [pathname]);
 
   return (
     <aside
