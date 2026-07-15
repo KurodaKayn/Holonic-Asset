@@ -16,10 +16,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
 
-import type { CreatableAssetKind, ProjectSummary } from "../_data/project-demo-data";
+import type { AssetKind, ProjectSummary } from "../_data/project-demo-data";
 
 const labels: Record<CreatableAssetKind, string> = {
   character: "Character",
@@ -75,8 +78,9 @@ export function CreateAssetDialog({
         <DialogHeader>
           <DialogTitle>Create {labels[kind]}</DialogTitle>
           <DialogDescription>
-            Set the production details for this {labels[kind].toLowerCase()}. Project defaults will
-            guide its {kind === "audio" ? "tone and atmosphere" : "visual style"}.
+            Set the production details for this {labels[kind].toLowerCase()}.
+            Project defaults will guide its{" "}
+            {kind === "audio" ? "tone and atmosphere" : "visual style"}.
           </DialogDescription>
         </DialogHeader>
 
@@ -114,7 +118,10 @@ export function CreateAssetDialog({
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="grid gap-2 text-sm font-medium">
                 Canvas size
-                <Input value={canvasSize} onChange={(event) => setCanvasSize(event.target.value)} />
+                <Input
+                  value={canvasSize}
+                  onChange={(event) => setCanvasSize(event.target.value)}
+                />
               </label>
               <div className="grid gap-2 text-sm font-medium">
                 <label htmlFor="create-asset-perspective">Perspective</label>
@@ -127,35 +134,35 @@ export function CreateAssetDialog({
             </div>
           ) : null}
 
-          {kind !== "audio" ? (
-            <>
-              <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Checkbox defaultChecked />
-                Use {project.name} project context
-              </label>
+          <label className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Checkbox defaultChecked />
+            Use {project.name} project context
+          </label>
 
-              <div className="rounded-lg border bg-muted/40 p-3">
-                <p className="text-xs font-medium text-muted-foreground">Generation context</p>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {[project.gameType, project.visualStyle, project.platform]
-                    .filter(Boolean)
-                    .map((item) => (
-                      <Badge key={item} variant="secondary">
-                        {item}
-                      </Badge>
-                    ))}
-                </div>
-                {project.description ? (
-                  <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">
-                    {project.description}
-                  </p>
-                ) : null}
-              </div>
-            </>
-          ) : null}
+          <div className="rounded-lg border bg-muted/40 p-3">
+            <p className="text-xs font-medium text-muted-foreground">
+              Generation context
+            </p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {[project.gameType, project.visualStyle, project.platform]
+                .filter(Boolean)
+                .map((item) => (
+                  <Badge key={item} variant="secondary">
+                    {item}
+                  </Badge>
+                ))}
+            </div>
+            {project.description ? (
+              <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">
+                {project.description}
+              </p>
+            ) : null}
+          </div>
 
           <DialogFooter>
-            <DialogClose render={<Button type="button" variant="outline" />}>Cancel</DialogClose>
+            <DialogClose render={<Button type="button" variant="outline" />}>
+              Cancel
+            </DialogClose>
             <Button type="submit">Create {labels[kind]}</Button>
           </DialogFooter>
         </form>
