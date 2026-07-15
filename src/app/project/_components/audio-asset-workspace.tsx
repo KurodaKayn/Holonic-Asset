@@ -9,6 +9,7 @@ import {
   Play,
   Plus,
   Repeat2,
+  Scissors,
   Sparkles,
   Trash2,
   Upload,
@@ -41,12 +42,16 @@ type AudioTrack = {
   name: string;
   url: string;
   duration: number;
+  trimStart: number;
+  trimEnd: number;
   offset: number;
   stretch: number;
   loop: boolean;
   muted: boolean;
   volume: number;
   waveform: number[];
+  cuts: number[];
+  deletedRanges: Array<[number, number]>;
   kind: "generated" | "imported";
 };
 
@@ -232,13 +237,32 @@ export function AudioAssetWorkspace() {
     const audio =
       currentPreview && currentPreview.src === track.url ? currentPreview : new Audio(track.url);
     previewAudioRefs.current[track.id] = audio;
-    audio.currentTime = 0;
+    audio.currentTime = track.trimStart;
     audio.playbackRate = 1 / track.stretch;
     audio.loop = track.loop;
     audio.volume = track.volume * masterVolume;
     audio.muted = track.muted || masterMuted;
     audio.onended = () => {
       setPlayingTrackIds((current) => current.filter((id) => id !== track.id));
+    };
+    audio.ontimeupdate = () => {
+      const deletedRange = track.deletedRanges.find(
+        ([start, end]) => audio.currentTime >= start && audio.currentTime < end,
+      );
+      if (deletedRange) audio.currentTime = deletedRange[1];
+      const previewTime =
+        track.offset + sourceToPlayableTime(audio.currentTime, track) * track.stretch;
+      timelineRef.current = previewTime;
+      setTimeline(previewTime);
+      if (audio.currentTime < track.trimEnd) return;
+      if (track.loop) {
+        audio.currentTime = track.trimStart;
+        void audio.play();
+      } else {
+        audio.pause();
+        audio.currentTime = track.trimStart;
+        setPlayingTrackIds((current) => current.filter((id) => id !== track.id));
+      }
     };
     try {
       await audio.play();
@@ -311,8 +335,14 @@ export function AudioAssetWorkspace() {
       );
       setTracks((current) => {
         if (!isProjectAudio) {
+          current.forEach((track) => {
+            audioRefs.current[track.id]?.pause();
+            previewAudioRefs.current[track.id]?.pause();
+            delete audioRefs.current[track.id];
+            delete previewAudioRefs.current[track.id];
+            if (objectUrls.current.delete(track.url)) URL.revokeObjectURL(track.url);
+          });
           return [
-            ...current,
             createTrack(
               `generated-${Date.now()}`,
               description.trim(),
@@ -332,7 +362,16 @@ export function AudioAssetWorkspace() {
         if (objectUrls.current.delete(generated.url)) URL.revokeObjectURL(generated.url);
         return current.map((track) =>
           track.id === generated.id
-            ? { ...track, url, name, waveform: createWaveform(nextGeneration) }
+            ? {
+                ...track,
+                url,
+                name,
+                trimStart: 0,
+                trimEnd: SOURCE_DURATION,
+                cuts: [],
+                deletedRanges: [],
+                waveform: createWaveform(nextGeneration),
+              }
             : track,
         );
       });
@@ -376,23 +415,31 @@ export function AudioAssetWorkspace() {
             </p>
           </div>
         </div>
-        <Badge variant="secondary">{tracks.length} tracks</Badge>
+        <Badge variant="secondary">
+          {tracks.length} {tracks.length === 1 ? "track" : "tracks"}
+        </Badge>
       </header>
 
       <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <section
           className="relative min-h-0 overflow-auto p-5 sm:p-7 lg:border-r"
-          onDragEnter={(event) => handleFileDrag(event, true)}
-          onDragOver={(event) => event.preventDefault()}
-          onDragLeave={(event) => handleFileDrag(event, false)}
+          onDragEnter={(event) => {
+            if (isProjectAudio) handleFileDrag(event, true);
+          }}
+          onDragOver={(event) => {
+            if (isProjectAudio) event.preventDefault();
+          }}
+          onDragLeave={(event) => {
+            if (isProjectAudio) handleFileDrag(event, false);
+          }}
           onDrop={(event) => {
             event.preventDefault();
             dragDepthRef.current = 0;
             setIsDraggingFile(false);
-            attachMp3(event.dataTransfer.files);
+            if (isProjectAudio) attachMp3(event.dataTransfer.files);
           }}
         >
-          {isDraggingFile ? (
+          {isProjectAudio && isDraggingFile ? (
             <div className="absolute inset-0 z-40 grid place-items-center bg-background/90 backdrop-blur-sm">
               <div className="text-center">
                 <Upload className="mx-auto size-8" />
@@ -407,13 +454,21 @@ export function AudioAssetWorkspace() {
           <div className="mb-6 flex items-end justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Multitrack editor
+                {isProjectAudio ? "Multitrack editor" : "Audio editor"}
               </p>
-              <h1 className="mt-1 text-xl font-semibold">Arrange and overlap audio</h1>
+              <h1 className="mt-1 text-xl font-semibold">
+                {isProjectAudio ? "Arrange and overlap audio" : "Edit generated audio"}
+              </h1>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Drag clips to move · drag edges to stretch
-            </p>
+            {isProjectAudio ? (
+              <p className="text-xs text-muted-foreground">
+                Drag clips to move · drag edges to stretch
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Set the playhead · split · drag edges to trim
+              </p>
+            )}
           </div>
 
           <div className="min-w-[54rem] overflow-hidden rounded-xl border bg-card shadow-sm">
@@ -439,98 +494,103 @@ export function AudioAssetWorkspace() {
                   }}
                   onUpdate={(update) => updateTrack(track.id, update)}
                   onPreview={() => void toggleTrackPreview(track)}
+                  onSeek={(value) => seek(value)}
                   onDelete={() => deleteTrack(track)}
                 />
               ))
             ) : (
               <div className="grid h-40 place-items-center text-sm text-muted-foreground">
-                Drop an MP3 to add a track.
+                {isProjectAudio
+                  ? "Drop an MP3 to add a track."
+                  : "Describe the audio you want to generate."}
               </div>
             )}
           </div>
 
-          <div className="mt-5 min-w-[54rem] rounded-xl border bg-card p-3 shadow-sm">
-            <input
-              aria-label="Timeline position"
-              type="range"
-              min="0"
-              max={TIMELINE_DURATION}
-              step="0.01"
-              value={timeline}
-              className="h-1.5 w-full cursor-pointer accent-foreground"
-              onChange={(event) => seek(Number(event.target.value))}
-            />
-            <div className="mt-3 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <Button
-                  size="icon-lg"
-                  onClick={toggleTransport}
-                  aria-label={isPlaying ? "Pause mix" : "Play mix"}
-                >
-                  {isPlaying ? <Pause /> : <Play />}
-                </Button>
-                <div>
-                  <p className="text-sm font-medium">Play complete mix</p>
-                  <p className="font-mono text-xs text-muted-foreground">
-                    {formatTime(timeline)} / {formatTime(TIMELINE_DURATION)}
-                  </p>
+          {isProjectAudio ? (
+            <div className="mt-5 min-w-[54rem] rounded-xl border bg-card p-3 shadow-sm">
+              <input
+                aria-label="Timeline position"
+                type="range"
+                min="0"
+                max={TIMELINE_DURATION}
+                step="0.01"
+                value={timeline}
+                className="h-1.5 w-full cursor-pointer accent-foreground"
+                onChange={(event) => seek(Number(event.target.value))}
+              />
+              <div className="mt-3 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="icon-lg"
+                    onClick={toggleTransport}
+                    aria-label={isPlaying ? "Pause mix" : "Play mix"}
+                  >
+                    {isPlaying ? <Pause /> : <Play />}
+                  </Button>
+                  <div>
+                    <p className="text-sm font-medium">Play complete mix</p>
+                    <p className="font-mono text-xs text-muted-foreground">
+                      {formatTime(timeline)} / {formatTime(TIMELINE_DURATION)}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    variant={masterMuted ? "secondary" : "ghost"}
+                    size="icon-sm"
+                    aria-label={masterMuted ? "Unmute master" : "Mute master"}
+                    onClick={() => setMasterMuted((value) => !value)}
+                  >
+                    {masterMuted ? <VolumeX /> : <Volume2 />}
+                  </Button>
+                  <input
+                    aria-label="Master volume"
+                    title={`Master volume ${Math.round(masterVolume * 100)}%`}
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={masterVolume}
+                    className="w-24 accent-foreground"
+                    onChange={(event) => setMasterVolume(Number(event.target.value))}
+                  />
+                  <span className="w-8 text-right text-xs tabular-nums text-muted-foreground">
+                    {Math.round(masterVolume * 100)}%
+                  </span>
+                  <Button
+                    variant={masterLoop ? "secondary" : "ghost"}
+                    size="icon-sm"
+                    aria-label="Loop complete mix"
+                    onClick={() => setMasterLoop((value) => !value)}
+                  >
+                    <Repeat2 />
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      aria-label="Master playback speed"
+                      className="flex h-8 items-center gap-1 rounded-md px-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none data-popup-open:bg-muted data-popup-open:text-foreground"
+                    >
+                      <Gauge className="size-3.5" />
+                      {masterRate}x
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="min-w-28">
+                      <DropdownMenuRadioGroup
+                        value={String(masterRate)}
+                        onValueChange={(value) => setMasterRate(Number(value))}
+                      >
+                        {SPEEDS.map((speed) => (
+                          <DropdownMenuRadioItem key={speed} value={String(speed)}>
+                            {speed}×
+                          </DropdownMenuRadioItem>
+                        ))}
+                      </DropdownMenuRadioGroup>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
-              <div className="flex items-center gap-1.5">
-                <Button
-                  variant={masterMuted ? "secondary" : "ghost"}
-                  size="icon-sm"
-                  aria-label={masterMuted ? "Unmute master" : "Mute master"}
-                  onClick={() => setMasterMuted((value) => !value)}
-                >
-                  {masterMuted ? <VolumeX /> : <Volume2 />}
-                </Button>
-                <input
-                  aria-label="Master volume"
-                  title={`Master volume ${Math.round(masterVolume * 100)}%`}
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value={masterVolume}
-                  className="w-24 accent-foreground"
-                  onChange={(event) => setMasterVolume(Number(event.target.value))}
-                />
-                <span className="w-8 text-right text-xs tabular-nums text-muted-foreground">
-                  {Math.round(masterVolume * 100)}%
-                </span>
-                <Button
-                  variant={masterLoop ? "secondary" : "ghost"}
-                  size="icon-sm"
-                  aria-label="Loop complete mix"
-                  onClick={() => setMasterLoop((value) => !value)}
-                >
-                  <Repeat2 />
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    aria-label="Master playback speed"
-                    className="flex h-8 items-center gap-1 rounded-md px-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none data-popup-open:bg-muted data-popup-open:text-foreground"
-                  >
-                    <Gauge className="size-3.5" />
-                    {masterRate}x
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="min-w-28">
-                    <DropdownMenuRadioGroup
-                      value={String(masterRate)}
-                      onValueChange={(value) => setMasterRate(Number(value))}
-                    >
-                      {SPEEDS.map((speed) => (
-                        <DropdownMenuRadioItem key={speed} value={String(speed)}>
-                          {speed}×
-                        </DropdownMenuRadioItem>
-                      ))}
-                    </DropdownMenuRadioGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
             </div>
-          </div>
+          ) : null}
         </section>
 
         <aside className="flex min-h-0 flex-col border-t bg-muted/15 lg:border-t-0">
@@ -539,7 +599,7 @@ export function AudioAssetWorkspace() {
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
               {isProjectAudio
                 ? "Update only the generated track. Imported clips stay in place."
-                : "Each generation adds a new audio track to the bottom of the timeline."}
+                : "Generate a new result for this audio. The current track will be replaced."}
             </p>
           </div>
           {isProjectAudio ? (
@@ -622,7 +682,7 @@ export function AudioAssetWorkspace() {
                 <textarea
                   autoFocus
                   className="min-h-52 w-full resize-none bg-transparent px-4 py-3 text-sm leading-6 outline-none placeholder:text-muted-foreground"
-                  placeholder="Describe a new audio track to add to the timeline. Existing tracks stay in place."
+                  placeholder="Describe the audio you want to generate. You can upload or drag an MP3 here for reference."
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
                 />
@@ -715,6 +775,7 @@ function TrackRow({
   audioRef,
   onUpdate,
   onPreview,
+  onSeek,
   onDelete,
 }: {
   track: AudioTrack;
@@ -723,28 +784,61 @@ function TrackRow({
   audioRef: (element: HTMLAudioElement | null) => void;
   onUpdate: (update: Partial<AudioTrack>) => void;
   onPreview: () => void;
+  onSeek: (value: number) => void;
   onDelete: () => void;
 }) {
-  const effectiveDuration = track.duration * track.stretch;
+  const sourceDuration = getPlayableDuration(track);
+  const effectiveDuration = sourceDuration * track.stretch;
   const left = (track.offset / TIMELINE_DURATION) * 100;
   const width = (effectiveDuration / TIMELINE_DURATION) * 100;
   const localProgress = clamp((timeline - track.offset) / effectiveDuration, 0, 1);
+  const waveformStart = Math.floor((track.trimStart / track.duration) * track.waveform.length);
+  const waveformEnd = Math.max(
+    waveformStart + 1,
+    Math.ceil((track.trimEnd / track.duration) * track.waveform.length),
+  );
+  const visibleWaveform = track.waveform
+    .slice(waveformStart, waveformEnd)
+    .filter((_, index, waveform) => {
+      const sourceTime =
+        track.trimStart +
+        (index / Math.max(1, waveform.length - 1)) * (track.trimEnd - track.trimStart);
+      return !track.deletedRanges.some(([start, end]) => sourceTime >= start && sourceTime < end);
+    });
+  const segmentBoundaries = [
+    track.trimStart,
+    ...track.cuts.filter((point) => point > track.trimStart && point < track.trimEnd),
+    track.trimEnd,
+  ];
+  const segments = segmentBoundaries
+    .slice(0, -1)
+    .map((start, index) => ({ start, end: segmentBoundaries[index + 1] }))
+    .filter(
+      (segment) =>
+        !track.deletedRanges.some(([start, end]) => start === segment.start && end === segment.end),
+    );
   const [durationInput, setDurationInput] = useState(effectiveDuration.toFixed(1));
+  const [selectedSegment, setSelectedSegment] = useState(0);
+  const activeSegment = segments[Math.min(selectedSegment, segments.length - 1)];
 
   useEffect(() => {
     setDurationInput(effectiveDuration.toFixed(1));
   }, [effectiveDuration]);
 
+  useEffect(() => {
+    if (selectedSegment >= segments.length) setSelectedSegment(Math.max(0, segments.length - 1));
+  }, [segments.length, selectedSegment]);
+
   function commitDuration() {
     const parsedDuration = Number(durationInput);
-    const maxDuration = Math.min(track.duration * 2, TIMELINE_DURATION - track.offset);
+    const maxDuration = Math.min(sourceDuration * 2, TIMELINE_DURATION - track.offset);
     const nextDuration = clamp(
       Number.isFinite(parsedDuration) ? parsedDuration : effectiveDuration,
-      track.duration * 0.5,
+      sourceDuration * 0.5,
       maxDuration,
     );
     setDurationInput(nextDuration.toFixed(1));
-    onUpdate({ stretch: nextDuration / track.duration });
+    onUpdate({ stretch: nextDuration / sourceDuration });
   }
 
   function beginMove(event: React.PointerEvent<HTMLDivElement>) {
@@ -781,24 +875,26 @@ function TrackRow({
     element.setPointerCapture(event.pointerId);
     const startX = event.clientX;
     const startOffset = track.offset;
-    const startEnd = track.offset + effectiveDuration;
+    const startTrimStart = track.trimStart;
+    const startTrimEnd = track.trimEnd;
 
     function move(pointerEvent: PointerEvent) {
       const delta = ((pointerEvent.clientX - startX) / laneWidth) * TIMELINE_DURATION;
+      const sourceDelta = delta / track.stretch;
       if (side === "right") {
-        const nextDuration = clamp(
-          effectiveDuration + delta,
-          track.duration * 0.5,
-          Math.min(track.duration * 2, TIMELINE_DURATION - startOffset),
-        );
-        onUpdate({ stretch: nextDuration / track.duration });
+        onUpdate({
+          trimEnd: clamp(startTrimEnd + sourceDelta, startTrimStart + 0.1, track.duration),
+        });
       } else {
-        const nextOffset = clamp(
-          startOffset + delta,
-          Math.max(0, startEnd - track.duration * 2),
-          startEnd - track.duration * 0.5,
-        );
-        onUpdate({ offset: nextOffset, stretch: (startEnd - nextOffset) / track.duration });
+        const nextTrimStart = clamp(startTrimStart + sourceDelta, 0, startTrimEnd - 0.1);
+        onUpdate({
+          trimStart: nextTrimStart,
+          offset: clamp(
+            startOffset + (nextTrimStart - startTrimStart) * track.stretch,
+            0,
+            TIMELINE_DURATION - 0.1,
+          ),
+        });
       }
     }
     function stop(pointerEvent: PointerEvent) {
@@ -808,6 +904,35 @@ function TrackRow({
     }
     element.addEventListener("pointermove", move);
     element.addEventListener("pointerup", stop);
+  }
+
+  function beginScrub(event: React.PointerEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    const handle = event.currentTarget;
+    const lane = handle.parentElement;
+    if (!lane) return;
+    const rect = lane.getBoundingClientRect();
+    handle.setPointerCapture(event.pointerId);
+
+    function update(clientX: number) {
+      onSeek(clamp(((clientX - rect.left) / rect.width) * TIMELINE_DURATION, 0, 30));
+    }
+
+    function move(pointerEvent: PointerEvent) {
+      update(pointerEvent.clientX);
+    }
+
+    function stop(pointerEvent: PointerEvent) {
+      update(pointerEvent.clientX);
+      handle.releasePointerCapture(pointerEvent.pointerId);
+      handle.removeEventListener("pointermove", move);
+      handle.removeEventListener("pointerup", stop);
+    }
+
+    update(event.clientX);
+    handle.addEventListener("pointermove", move);
+    handle.addEventListener("pointerup", stop);
   }
 
   return (
@@ -822,7 +947,7 @@ function TrackRow({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-0.5">
+        <div className="flex flex-wrap items-center gap-x-0.5 gap-y-1">
           <Button
             variant="ghost"
             size="icon-sm"
@@ -877,6 +1002,63 @@ function TrackRow({
           >
             <Repeat2 />
           </Button>
+          <div className="flex items-center rounded-md border bg-background p-0.5">
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              aria-label={`Split ${track.name} at playhead`}
+              title="Split at playhead"
+              onClick={() => {
+                const sourcePoint = playableToSourceTime(
+                  (timeline - track.offset) / track.stretch,
+                  track,
+                );
+                if (sourcePoint <= track.trimStart + 0.1 || sourcePoint >= track.trimEnd - 0.1)
+                  return;
+                if (track.cuts.some((point) => Math.abs(point - sourcePoint) < 0.1)) return;
+                const cuts = [...track.cuts, sourcePoint].sort((a, b) => a - b);
+                onUpdate({ cuts });
+                setSelectedSegment(cuts.filter((point) => point < sourcePoint).length);
+              }}
+            >
+              <Scissors />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              className="hover:text-destructive"
+              aria-label="Delete selected segment"
+              title="Delete selected segment"
+              disabled={!activeSegment}
+              onClick={() => {
+                if (!activeSegment) return;
+                if (segments.length === 1) return onDelete();
+                if (selectedSegment === 0) {
+                  onUpdate({
+                    trimStart: activeSegment.end,
+                    cuts: track.cuts.filter((point) => point > activeSegment.end),
+                  });
+                  setSelectedSegment(0);
+                } else if (selectedSegment === segments.length - 1) {
+                  onUpdate({
+                    trimEnd: activeSegment.start,
+                    cuts: track.cuts.filter((point) => point < activeSegment.start),
+                  });
+                  setSelectedSegment(selectedSegment - 1);
+                } else {
+                  onUpdate({
+                    deletedRanges: [
+                      ...track.deletedRanges,
+                      [activeSegment.start, activeSegment.end],
+                    ],
+                  });
+                  setSelectedSegment(Math.max(0, selectedSegment - 1));
+                }
+              }}
+            >
+              <Trash2 />
+            </Button>
+          </div>
           <label
             className="flex h-8 items-center gap-0.5 rounded-md px-1.5 text-muted-foreground transition-colors hover:bg-muted"
             title="Set target duration"
@@ -885,8 +1067,8 @@ function TrackRow({
             <input
               aria-label={`${track.name} target duration in seconds`}
               type="number"
-              min={(track.duration * 0.5).toFixed(1)}
-              max={Math.min(track.duration * 2, TIMELINE_DURATION - track.offset).toFixed(1)}
+              min={(sourceDuration * 0.5).toFixed(1)}
+              max={Math.min(sourceDuration * 2, TIMELINE_DURATION - track.offset).toFixed(1)}
               step="0.1"
               inputMode="decimal"
               className="w-8 appearance-none bg-transparent text-left text-xs tabular-nums text-foreground outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
@@ -899,23 +1081,27 @@ function TrackRow({
             />
             <span className="text-[0.65rem]">s</span>
           </label>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="ml-auto text-muted-foreground hover:text-destructive"
-            aria-label={`Delete ${track.name}`}
-            onClick={onDelete}
-          >
-            <Trash2 />
-          </Button>
         </div>
       </div>
 
-      <div className="relative h-28 overflow-hidden bg-[linear-gradient(to_right,var(--border)_1px,transparent_1px)] bg-[length:16.666%_100%]">
-        <div
-          className="pointer-events-none absolute bottom-0 top-0 z-20 w-px bg-foreground/45"
+      <div
+        className="relative h-28 overflow-hidden bg-[linear-gradient(to_right,var(--border)_1px,transparent_1px)] bg-[length:16.666%_100%]"
+        onPointerDown={(event) => {
+          if (event.target !== event.currentTarget) return;
+          const rect = event.currentTarget.getBoundingClientRect();
+          onSeek(clamp(((event.clientX - rect.left) / rect.width) * TIMELINE_DURATION, 0, 30));
+        }}
+      >
+        <button
+          type="button"
+          aria-label="Drag playhead"
+          className="absolute bottom-0 top-0 z-30 w-3 -translate-x-1/2 cursor-ew-resize touch-none bg-transparent p-0"
           style={{ left: `${(timeline / TIMELINE_DURATION) * 100}%` }}
-        />
+          onPointerDown={beginScrub}
+        >
+          <span className="absolute bottom-0 left-1/2 top-2 w-px -translate-x-1/2 bg-foreground/60" />
+          <span className="absolute left-1/2 top-0 size-2.5 -translate-x-1/2 rounded-sm bg-foreground shadow-sm" />
+        </button>
         <div
           className="absolute top-3 flex h-[5.5rem] cursor-grab touch-none select-none items-center gap-0.5 overflow-hidden rounded-lg border border-foreground/20 bg-foreground/8 px-3 shadow-sm active:cursor-grabbing"
           style={{ left: `${left}%`, width: `${width}%` }}
@@ -924,29 +1110,67 @@ function TrackRow({
           <button
             data-resize="true"
             type="button"
-            aria-label={`Resize start of ${track.name}`}
-            className="absolute bottom-0 left-0 top-0 z-10 w-2 cursor-ew-resize bg-foreground/15 hover:bg-foreground/25"
+            aria-label={`Trim start of ${track.name}`}
+            className="absolute bottom-0 left-0 top-0 z-10 w-3 cursor-ew-resize bg-foreground/25 hover:bg-foreground/40"
             onPointerDown={(event) => beginResize(event, "left")}
           />
-          {track.waveform.map((height, index) => (
+          {visibleWaveform.map((height, index) => (
             <span
               key={index}
               className="min-w-0 flex-1 rounded-full"
               style={{
                 height: `${height}%`,
                 background:
-                  index / track.waveform.length <= localProgress
+                  index / visibleWaveform.length <= localProgress
                     ? "var(--foreground)"
                     : "var(--muted-foreground)",
-                opacity: index / track.waveform.length <= localProgress ? 0.9 : 0.35,
+                opacity: index / visibleWaveform.length <= localProgress ? 0.9 : 0.35,
               }}
             />
           ))}
+          {track.cuts
+            .filter(
+              (point) =>
+                point > track.trimStart &&
+                point < track.trimEnd &&
+                !track.deletedRanges.some(([start, end]) => point > start && point <= end),
+            )
+            .map((point) => (
+              <span
+                key={point}
+                className="pointer-events-none absolute bottom-0 top-0 z-10 w-0.5 bg-background shadow-[0_0_0_1px_var(--foreground)]"
+                style={{ left: `${(sourceToPlayableTime(point, track) / sourceDuration) * 100}%` }}
+              />
+            ))}
+          {segments.map((segment, index) => {
+            const segmentStart = sourceToPlayableTime(segment.start, track);
+            return (
+              <button
+                key={`${segment.start}-${segment.end}`}
+                data-resize="true"
+                type="button"
+                aria-label={`Select segment ${index + 1}`}
+                className={`absolute bottom-1 top-1 z-[5] border transition-colors ${
+                  selectedSegment === index
+                    ? "border-transparent bg-foreground/8"
+                    : "border-transparent hover:bg-foreground/5"
+                }`}
+                style={{
+                  left: `${(segmentStart / sourceDuration) * 100}%`,
+                  width: `${((segment.end - segment.start) / sourceDuration) * 100}%`,
+                }}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setSelectedSegment(index);
+                }}
+              />
+            );
+          })}
           <button
             data-resize="true"
             type="button"
-            aria-label={`Resize end of ${track.name}`}
-            className="absolute bottom-0 right-0 top-0 z-10 w-2 cursor-ew-resize bg-foreground/15 hover:bg-foreground/25"
+            aria-label={`Trim end of ${track.name}`}
+            className="absolute bottom-0 right-0 top-0 z-10 w-3 cursor-ew-resize bg-foreground/25 hover:bg-foreground/40"
             onPointerDown={(event) => beginResize(event, "right")}
           />
         </div>
@@ -957,7 +1181,10 @@ function TrackRow({
         preload="auto"
         onLoadedMetadata={(event) => {
           if (track.kind === "imported" && Number.isFinite(event.currentTarget.duration))
-            onUpdate({ duration: event.currentTarget.duration });
+            onUpdate({
+              duration: event.currentTarget.duration,
+              trimEnd: event.currentTarget.duration,
+            });
         }}
         onPlay={() => undefined}
       />
@@ -979,12 +1206,16 @@ function createTrack(
     name,
     url,
     duration,
+    trimStart: 0,
+    trimEnd: duration,
     offset,
     stretch: 1,
     loop: false,
     muted: false,
     volume: 1,
     waveform: createWaveform(seed),
+    cuts: [],
+    deletedRanges: [],
     kind,
   };
 }
@@ -995,6 +1226,37 @@ function createWaveform(seed: number) {
       18 + Math.abs(Math.sin(index * 0.39 + seed) * 52 + Math.cos(index * 0.17 + seed * 0.4) * 16),
     ),
   );
+}
+
+function getPlayableDuration(track: AudioTrack) {
+  return Math.max(
+    0.1,
+    track.trimEnd -
+      track.trimStart -
+      track.deletedRanges.reduce(
+        (total, [start, end]) =>
+          total + Math.max(0, Math.min(end, track.trimEnd) - Math.max(start, track.trimStart)),
+        0,
+      ),
+  );
+}
+
+function sourceToPlayableTime(sourceTime: number, track: AudioTrack) {
+  const clampedTime = clamp(sourceTime, track.trimStart, track.trimEnd);
+  const removedBefore = track.deletedRanges.reduce((total, [start, end]) => {
+    if (clampedTime <= start) return total;
+    return total + Math.max(0, Math.min(clampedTime, end) - Math.max(track.trimStart, start));
+  }, 0);
+  return Math.max(0, clampedTime - track.trimStart - removedBefore);
+}
+
+function playableToSourceTime(playableTime: number, track: AudioTrack) {
+  let sourceTime = track.trimStart + Math.max(0, playableTime);
+  for (const [start, end] of [...track.deletedRanges].sort((a, b) => a[0] - b[0])) {
+    if (sourceTime < start) break;
+    sourceTime += end - start;
+  }
+  return Math.min(sourceTime, track.trimEnd);
 }
 
 function syncTracksAt(
@@ -1009,14 +1271,19 @@ function syncTracksAt(
   tracks.forEach((track) => {
     const audio = refs[track.id];
     if (!audio || !Number.isFinite(audio.duration)) return;
-    const effectiveDuration = track.duration * track.stretch;
+    const sourceDuration = getPlayableDuration(track);
+    const effectiveDuration = sourceDuration * track.stretch;
     let localTime = time - track.offset;
     if (track.loop && localTime >= 0) localTime %= effectiveDuration;
     if (localTime < 0 || localTime >= effectiveDuration) {
       audio.pause();
       return;
     }
-    const sourceTime = clamp(localTime / track.stretch, 0, Math.max(0, audio.duration - 0.01));
+    const sourceTime = clamp(
+      playableToSourceTime(localTime / track.stretch, track),
+      track.trimStart,
+      Math.min(track.trimEnd, Math.max(0, audio.duration - 0.01)),
+    );
     if (Math.abs(audio.currentTime - sourceTime) > 0.12) audio.currentTime = sourceTime;
     audio.playbackRate = (1 / track.stretch) * masterRate;
     audio.volume = track.volume * masterVolume;
