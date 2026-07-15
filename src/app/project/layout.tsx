@@ -1,6 +1,10 @@
 import { ProjectChrome } from "./_components/project-chrome";
-import { projectSummaries } from "./_data/project-demo-data";
+import { ProjectStoreProvider } from "./_components/project-store";
 
 export default function ProjectLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <ProjectChrome projects={projectSummaries}>{children}</ProjectChrome>;
+  return (
+    <ProjectStoreProvider>
+      <ProjectChrome>{children}</ProjectChrome>
+    </ProjectStoreProvider>
+  );
 }

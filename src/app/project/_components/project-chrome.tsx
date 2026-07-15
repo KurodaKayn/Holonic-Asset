@@ -5,16 +5,9 @@ import { Suspense } from "react";
 
 import { cn } from "@/lib/utils";
 
-import type { ProjectSummary } from "../_data/project-demo-data";
 import { ProjectSidebar } from "./project-sidebar";
 
-export function ProjectChrome({
-  children,
-  projects,
-}: {
-  children: React.ReactNode;
-  projects: ProjectSummary[];
-}) {
+export function ProjectChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isEditorRoute = pathname.startsWith("/project/assets/");
 
@@ -27,7 +20,7 @@ export function ProjectChrome({
     >
       {!isEditorRoute ? (
         <Suspense fallback={<div className="w-16 shrink-0 border-r bg-sidebar md:w-80" />}>
-          <ProjectSidebar projects={projects} />
+          <ProjectSidebar />
         </Suspense>
       ) : null}
       <section className="min-w-0 flex-1 overflow-hidden">{children}</section>
