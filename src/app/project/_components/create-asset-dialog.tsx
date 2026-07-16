@@ -2,7 +2,6 @@
 
 import { ArrowDown, ArrowUp, FileAudio, ImagePlus, Plus, X } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -45,19 +44,32 @@ const AUDIO_MIME_TYPES = ["audio/mpeg", "audio/wav", "audio/x-wav", "audio/mp4",
 const ASPECT_RATIOS = ["1:1", "4:3", "16:9", "9:16", "21:9"];
 const UI_COMPONENT_TYPES = ["Button", "Card", "Panel", "Navigation", "Dialog", "HUD", "Custom"];
 
-type UiComponent = { id: number; type: string; name: string; description: string };
+type UiComponent = {
+  id: number;
+  type: string;
+  name: string;
+  description: string;
+};
+
+export type CreationRequest = {
+  kind: CreatableAssetKind;
+  name: string;
+  prompt: string;
+  canvasSize: string;
+};
 
 export function CreateAssetDialog({
   children,
   initialPrompt = "",
+  onCreate,
   project,
 }: {
   children: (openDialog: (kind: CreatableAssetKind) => void) => React.ReactNode;
   initialPrompt?: string;
+  onCreate: (request: CreationRequest) => void;
   project: ProjectSummary;
 }) {
   const [open, setOpen] = useState(false);
-  const router = useRouter();
   const [kind, setKind] = useState<CreatableAssetKind>("character");
   const [name, setName] = useState("");
   const [prompt, setPrompt] = useState("");
@@ -188,7 +200,7 @@ export function CreateAssetDialog({
   const resizeDescriptions = (
     nextCount: number,
     setCount: (count: number) => void,
-    setItems: (items: string[]) => void,
+    setItems: React.Dispatch<React.SetStateAction<string[]>>,
   ) => {
     const count = Math.max(1, Math.min(12, Number.isFinite(nextCount) ? nextCount : 1));
     setCount(count);
@@ -213,25 +225,13 @@ export function CreateAssetDialog({
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (kind === "audio") {
-      const stylePrompt = instrumental || audioStyle === "Custom" ? customStyle.trim() : audioStyle;
-      const params = new URLSearchParams({
-        project: project.id,
-        name: name.trim(),
-        prompt: stylePrompt,
-        style: stylePrompt,
-        duration,
-        instrumental: String(instrumental),
-      });
-      if (!instrumental) {
-        if (lyrics.trim()) params.set("lyrics", lyrics.trim());
-        params.set("voice", voice);
-      }
-      setOpen(false);
-      resetForm();
-      router.push(`/project/audio/new?${params.toString()}`);
-      return;
-    }
+    const creationPrompt =
+      kind === "audio"
+        ? instrumental || audioStyle === "Custom"
+          ? customStyle.trim()
+          : audioStyle
+        : prompt.trim();
+    onCreate({ kind, name: name.trim(), prompt: creationPrompt, canvasSize });
     setOpen(false);
     resetForm();
   };
@@ -501,7 +501,12 @@ export function CreateAssetDialog({
                     onClick={() => {
                       setUiComponents((current) => [
                         ...current,
-                        { id: nextComponentId, type: "Panel", name: "", description: "" },
+                        {
+                          id: nextComponentId,
+                          type: "Panel",
+                          name: "",
+                          description: "",
+                        },
                       ]);
                       setNextComponentId((current) => current + 1);
                     }}
@@ -559,7 +564,9 @@ export function CreateAssetDialog({
                           className="w-full"
                           value={component.type}
                           onChange={(event) =>
-                            updateUiComponent(component.id, { type: event.target.value })
+                            updateUiComponent(component.id, {
+                              type: event.target.value,
+                            })
                           }
                         >
                           {UI_COMPONENT_TYPES.map((type) => (
@@ -575,7 +582,9 @@ export function CreateAssetDialog({
                           required
                           value={component.name}
                           onChange={(event) =>
-                            updateUiComponent(component.id, { name: event.target.value })
+                            updateUiComponent(component.id, {
+                              name: event.target.value,
+                            })
                           }
                         />
                       </label>
@@ -588,7 +597,9 @@ export function CreateAssetDialog({
                           placeholder="Describe this component's shape and purpose..."
                           value={component.description}
                           onChange={(event) =>
-                            updateUiComponent(component.id, { description: event.target.value })
+                            updateUiComponent(component.id, {
+                              description: event.target.value,
+                            })
                           }
                         />
                       </label>

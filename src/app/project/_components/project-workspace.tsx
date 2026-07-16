@@ -1,14 +1,15 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 import type { AssetKind } from "../_data/project-demo-data";
-import { assetGroups, createAssetKinds } from "../_data/project-demo-data";
+import { createAssetKinds } from "../_data/project-demo-data";
 import { AssetCard } from "./asset-card";
+import type { CreationRequest } from "./create-asset-dialog";
+import { CreationQueue, type CreationQueueItem } from "./creation-queue";
 import { ProjectCommandBar } from "./project-command-bar";
 import { useProjectStore } from "./project-store";
 
@@ -17,11 +18,16 @@ const LAST_PROJECT_STORAGE_KEY = "game-asset-pack:last-project-id";
 export function ProjectWorkspace() {
   const [query, setQuery] = useState("");
   const [selectedKinds, setSelectedKinds] = useState<AssetKind[]>(["character", "object", "tiles"]);
+  const [creationQueue, setCreationQueue] = useState<CreationQueueItem[]>([]);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { projects } = useProjectStore();
+  const { projects, assetGroups, copyAsset, deleteAsset } = useProjectStore();
   const requestedProjectId = searchParams.get("project");
   const currentProject = projects.find((project) => project.id === requestedProjectId);
+
+  const handleCreate = useCallback((request: CreationRequest) => {
+    setCreationQueue((current) => [...current, { ...request, id: crypto.randomUUID() }]);
+  }, []);
 
   useEffect(() => {
     try {
@@ -75,7 +81,7 @@ export function ProjectWorkspace() {
             kindLabel: group.title,
           })),
       );
-  }, [query, selectedKinds]);
+  }, [assetGroups, query, selectedKinds]);
 
   if (!currentProject) {
     return (
@@ -90,42 +96,19 @@ export function ProjectWorkspace() {
   return (
     <ScrollArea className="h-full">
       <div className="mx-auto w-full max-w-[96rem] px-5 py-7 sm:px-8 sm:py-9">
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Current Project
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-              {currentProject.name}
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">{currentProject.style}</p>
-            {currentProject.description ? (
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-                {currentProject.description}
-              </p>
-            ) : null}
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {[currentProject.gameType, currentProject.visualStyle, currentProject.platform]
-                .filter(Boolean)
-                .map((item) => (
-                  <Badge key={item} variant="secondary">
-                    {item}
-                  </Badge>
-                ))}
-            </div>
-          </div>
-        </header>
-
-        <div className="py-10 sm:py-12">
+        <div className="pb-10 sm:pb-12">
           <ProjectCommandBar
             query={query}
             selectedKinds={selectedKinds}
             assetKinds={createAssetKinds}
             project={currentProject}
+            onCreate={handleCreate}
             onQueryChange={setQuery}
             onSelectedKindsChange={setSelectedKinds}
           />
         </div>
+
+        <CreationQueue items={creationQueue} />
 
         {filteredAssets.length > 0 ? (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
@@ -137,6 +120,8 @@ export function ProjectWorkspace() {
                 kind={asset.kind}
                 kindLabel={asset.kindLabel}
                 projectId={currentProject.id}
+                onCopy={() => copyAsset(asset.id)}
+                onDelete={() => deleteAsset(asset.id)}
               />
             ))}
           </div>
