@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  ArrowLeft,
   AudioLines,
   Clock3,
   Gauge,
@@ -16,11 +15,9 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -30,8 +27,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
-
-import { useProjectStore } from "./project-store";
 
 const TIMELINE_DURATION = 30;
 const SOURCE_DURATION = 10;
@@ -64,8 +59,6 @@ type ReferenceAudio = {
 export function AudioAssetWorkspace() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const { projects } = useProjectStore();
-  const project = projects.find((item) => item.id === searchParams.get("project")) ?? projects[0];
   const isProjectAudio = pathname.startsWith("/project/audio");
   const isNewAudio = !isProjectAudio && searchParams.get("new") === "1";
   const name = searchParams.get("name") || "Untitled audio";
@@ -91,7 +84,6 @@ export function AudioAssetWorkspace() {
   const [masterMuted, setMasterMuted] = useState(false);
   const [masterLoop, setMasterLoop] = useState(false);
   const [masterRate, setMasterRate] = useState(1);
-  const displayName = isProjectAudio ? name : description.trim() || "Untitled audio";
 
   useEffect(() => {
     const urls = objectUrls.current;
@@ -389,37 +381,6 @@ export function AudioAssetWorkspace() {
 
   return (
     <main className="flex h-full min-h-0 flex-col bg-background">
-      <header className="flex h-16 shrink-0 items-center justify-between border-b px-5 sm:px-8">
-        <div className="flex min-w-0 items-center gap-3">
-          <Button
-            render={
-              <Link
-                href={
-                  isProjectAudio && project
-                    ? `/project?project=${encodeURIComponent(project.id)}`
-                    : "/audio"
-                }
-              />
-            }
-            nativeButton={false}
-            variant="ghost"
-            size="icon-sm"
-            aria-label={isProjectAudio ? "Back to project" : "Back to audio list"}
-          >
-            <ArrowLeft />
-          </Button>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">{displayName}</p>
-            <p className="truncate text-xs text-muted-foreground">
-              {project?.name ?? "Standalone audio"} · Audio timeline
-            </p>
-          </div>
-        </div>
-        <Badge variant="secondary">
-          {tracks.length} {tracks.length === 1 ? "track" : "tracks"}
-        </Badge>
-      </header>
-
       <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <section
           className="relative min-h-0 overflow-auto p-5 sm:p-7 lg:border-r"
