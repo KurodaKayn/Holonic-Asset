@@ -2,26 +2,28 @@ import { Button } from "@/components/ui/button";
 
 import type { CreatableAssetKind, ProjectSummary } from "../_data/project-demo-data";
 import { AssetKindIcon } from "./asset-kind-icon";
-import { CreateAssetDialog } from "./create-asset-dialog";
+import { CreateAssetDialog, type CreationRequest } from "./create-asset-dialog";
 
 const labels: Record<CreatableAssetKind, string> = {
   character: "Character",
   object: "Object",
   tiles: "Tiles",
-  map: "Map",
+  map: "Background",
   ui: "UI",
   audio: "Audio",
 };
 
 export function CreateAssetToolbar({
   assetKinds,
+  onCreate,
   project,
 }: {
   assetKinds: CreatableAssetKind[];
+  onCreate: (request: CreationRequest) => void;
   project: ProjectSummary;
 }) {
   return (
-    <CreateAssetDialog project={project}>
+    <CreateAssetDialog project={project} onCreate={onCreate}>
       {(openDialog) => (
         <div className="grid grid-cols-1 rounded-2xl border bg-background p-1 shadow-sm sm:grid-cols-2 lg:grid-cols-5">
           {assetKinds.map((kind) => (

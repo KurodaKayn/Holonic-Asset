@@ -427,19 +427,23 @@ export function CreateAssetDialog({
                     />
                   </label>
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <label className="grid gap-2 text-sm font-medium">
-                      Layer num
-                      <Input
-                        required
-                        type="number"
-                        min="1"
-                        max="12"
-                        value={layerCount}
+                    <div className="grid gap-2 text-sm font-medium">
+                      <label htmlFor="scenery-layer-count">Layer num</label>
+                      <NativeSelect
+                        id="scenery-layer-count"
+                        className="w-full"
+                        value={String(layerCount)}
                         onChange={(event) =>
                           resizeDescriptions(Number(event.target.value), setLayerCount, setLayers)
                         }
-                      />
-                    </label>
+                      >
+                        {Array.from({ length: 12 }, (_, index) => index + 1).map((count) => (
+                          <NativeSelectOption key={count} value={String(count)}>
+                            {count}
+                          </NativeSelectOption>
+                        ))}
+                      </NativeSelect>
+                    </div>
                     <div className="grid gap-2 text-sm font-medium">
                       <label htmlFor="scenery-aspect-ratio">Aspect ratio</label>
                       <NativeSelect
@@ -461,14 +465,12 @@ export function CreateAssetDialog({
                 </>
               ) : (
                 <>
-                  <label className="grid gap-2 text-sm font-medium">
-                    Tile num
-                    <Input
-                      required
-                      type="number"
-                      min="1"
-                      max="12"
-                      value={tileCount}
+                  <div className="grid gap-2 text-sm font-medium">
+                    <label htmlFor="map-tile-count">Tile num</label>
+                    <NativeSelect
+                      id="map-tile-count"
+                      className="w-full"
+                      value={String(tileCount)}
                       onChange={(event) =>
                         resizeDescriptions(
                           Number(event.target.value),
@@ -476,8 +478,14 @@ export function CreateAssetDialog({
                           setTileDescriptions,
                         )
                       }
-                    />
-                  </label>
+                    >
+                      {Array.from({ length: 12 }, (_, index) => index + 1).map((count) => (
+                        <NativeSelectOption key={count} value={String(count)}>
+                          {count}
+                        </NativeSelectOption>
+                      ))}
+                    </NativeSelect>
+                  </div>
                   <DescriptionList
                     label="Tiles"
                     descriptions={tileDescriptions}
