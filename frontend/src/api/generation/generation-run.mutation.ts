@@ -6,7 +6,7 @@ import type {
   GenerationLifecycleUpdate,
 } from "./generation-lifecycle";
 import type { GenerationRun } from "@/types/generation";
-import { assetKeys } from "@/data/asset/keys";
+import { assetKeys } from "@/api/asset/keys";
 import { generationKeys } from "./keys";
 
 export function useEnqueueGenerationMutation() {

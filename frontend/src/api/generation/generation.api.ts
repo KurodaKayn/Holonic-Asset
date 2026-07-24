@@ -10,6 +10,5 @@ export const generationApi = {
   enqueue: (
     input: GenerationInput,
     onUpdate: (update: GenerationLifecycleUpdate) => void,
-  ) =>
-    mockGenerationLifecycle.enqueue(input, onUpdate),
+  ) => mockGenerationLifecycle.enqueue(input, onUpdate),
 };

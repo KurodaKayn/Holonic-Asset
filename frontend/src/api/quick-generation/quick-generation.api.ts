@@ -2,7 +2,7 @@ import {
   deleteMockQuickAsset,
   generateMockQuickAsset,
   listMockQuickAssets,
-} from "@/data/quick-generation/quick-generation.mock";
+} from "@/api/quick-generation/quick-generation.mock";
 import type {
   GenerateQuickAssetInput,
   QuickGenerationAsset,

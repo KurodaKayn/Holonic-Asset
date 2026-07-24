@@ -4,8 +4,8 @@ import {
   removeMockGenerationRun,
   updateMockGenerationRun,
 } from "./generation-run.mock";
-import { addMockAsset, hasMockProject } from "@/data/project/project-asset.mock";
-import { createGenerationLifecycle } from "@/data/generation/generation-lifecycle";
+import { addMockAsset, hasMockProject } from "@/api/project/project-asset.mock";
+import { createGenerationLifecycle } from "@/api/generation/generation-lifecycle";
 
 export const mockGenerationLifecycle = createGenerationLifecycle({
   createRun: createMockGenerationRun,

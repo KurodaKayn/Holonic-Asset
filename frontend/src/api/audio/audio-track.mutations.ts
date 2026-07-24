@@ -5,8 +5,8 @@ import {
   type QueryClient,
 } from "@tanstack/react-query";
 
-import { audioApi } from "@/data/audio/audio.api";
-import { audioKeys } from "@/data/audio/audio.keys";
+import { audioApi } from "@/api/audio/audio.api";
+import { audioKeys } from "@/api/audio/audio.keys";
 import type { AudioTrack } from "@/types/audio";
 
 export function addAudioTrackMutationOptions(queryClient: QueryClient) {

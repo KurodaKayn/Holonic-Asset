@@ -1,7 +1,7 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
-import { quickGenerationApi } from "@/data/quick-generation/quick-generation.api";
-import { quickGenerationKeys } from "@/data/quick-generation/quick-generation.keys";
+import { quickGenerationApi } from "@/api/quick-generation/quick-generation.api";
+import { quickGenerationKeys } from "@/api/quick-generation/quick-generation.keys";
 
 export function quickAssetsQueryOptions() {
   return queryOptions({

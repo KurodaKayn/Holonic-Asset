@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useStore } from "zustand";
 
 import { useTimeout } from "@/hooks/use-timeout";
-import { useSaveAssetRevisionMutation } from "@/data/asset/asset-save-revision.mutation";
+import { useSaveAssetRevisionMutation } from "@/api/asset/asset-save-revision.mutation";
 import {
   initializeEditorWorkspace,
   markEditorWorkspaceSaved,

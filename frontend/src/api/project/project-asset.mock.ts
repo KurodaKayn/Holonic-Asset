@@ -1,5 +1,5 @@
 import { assetGroupsByProject, projectSummaries } from "./project.seed";
-import { removeMockProjectGenerationRuns } from "@/data/generation/generation-run.mock";
+import { removeMockProjectGenerationRuns } from "@/api/generation/generation-run.mock";
 import type { AssetGroupsByProject } from "@/types/asset-library";
 import type { ProjectAsset } from "@/types/asset";
 import type { ProjectSummary } from "@/types/project";

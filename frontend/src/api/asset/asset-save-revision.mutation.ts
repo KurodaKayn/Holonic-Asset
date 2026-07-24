@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { assetApi } from "./asset.api";
-import { editorKeys } from "@/data/editor/editor.keys";
+import { editorKeys } from "@/api/editor/editor.keys";
 import type {
   AssetEditorDocument,
   EditorDocumentData,

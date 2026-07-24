@@ -5,8 +5,8 @@ import {
   type QueryClient,
 } from "@tanstack/react-query";
 
-import { quickGenerationApi } from "@/data/quick-generation/quick-generation.api";
-import { quickGenerationKeys } from "@/data/quick-generation/quick-generation.keys";
+import { quickGenerationApi } from "@/api/quick-generation/quick-generation.api";
+import { quickGenerationKeys } from "@/api/quick-generation/quick-generation.keys";
 import type { QuickGenerationAsset } from "@/types/quick-generation";
 
 export function generateQuickAssetMutationOptions(queryClient: QueryClient) {

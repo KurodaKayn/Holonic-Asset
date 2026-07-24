@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import {
   useDeleteQuickAssetMutation,
   useGenerateQuickAssetMutation,
-} from "@/data/quick-generation/quick-asset.mutations";
-import { useQuickAssetsQuery } from "@/data/quick-generation/quick-assets.query";
+} from "@/api/quick-generation/quick-asset.mutations";
+import { useQuickAssetsQuery } from "@/api/quick-generation/quick-assets.query";
 import type { QuickGenerationAsset } from "@/types/quick-generation";
 import { quickGenerationSizes } from "./QuickGeneration.constants";
 

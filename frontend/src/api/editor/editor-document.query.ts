@@ -1,7 +1,7 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
-import { editorDocumentApi } from "@/data/editor/editor-document.api";
-import { editorKeys } from "@/data/editor/editor.keys";
+import { editorDocumentApi } from "@/api/editor/editor-document.api";
+import { editorKeys } from "@/api/editor/editor.keys";
 
 export function editorDocumentQueryOptions(projectId: string, assetId: string) {
   return queryOptions({

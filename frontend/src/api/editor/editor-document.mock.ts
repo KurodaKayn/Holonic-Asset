@@ -1,13 +1,13 @@
 import {
   listMockAssetGroups,
   listMockProjects,
-} from "@/data/project/project-asset.mock";
-import { DataApiError } from "@/data/api-error";
+} from "@/api/project/project-asset.mock";
+import { DataApiError } from "@/api/api-error";
 import {
   createDefaultEditorDocument,
   mergeEditorDocument,
-} from "@/data/editor/editor-document.seed";
-import { runMockRequest, type MockRequestOptions } from "@/data/mock-request";
+} from "@/api/editor/editor-document.seed";
+import { runMockRequest, type MockRequestOptions } from "@/api/mock-request";
 import type { EditorDocumentData } from "@/types/editor-document";
 
 export type GetEditorDocumentInput = {
