@@ -8,7 +8,7 @@ const sourceExtensions = new Set([".ts", ".tsx"]);
 const forbiddenUiImport =
   /from\s+["']@\/(?:adapters\/|data\/[^"']+\.(?:mock|seed))[^"']*["']/g;
 
-function listSourceFiles(directory) {
+function listSourceFiles(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const path = join(directory, entry.name);
 
