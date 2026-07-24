@@ -1,14 +1,6 @@
-export type AudioTrack = {
-  id: string;
-  name: string;
-  offset: number;
-  length: number;
-  tone: string;
-  muted: boolean;
-  loop: boolean;
-};
+import type { AudioTrack } from "@/types/audio";
 
-export const initialAudioTracks: AudioTrack[] = [
+export const audioTrackSeed = [
   {
     id: "orchard",
     name: "orchard-ambience.wav",
@@ -36,4 +28,4 @@ export const initialAudioTracks: AudioTrack[] = [
     muted: false,
     loop: true,
   },
-];
+] as const satisfies readonly AudioTrack[];

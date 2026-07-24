@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { copyMockAsset } from "@/adapters/mock-core-api/repository";
+import { assetApi } from "./asset.api";
 import { assetKeys } from "./keys";
 
 type CopyAssetInput = { projectId: string; assetId: string };
@@ -10,7 +10,7 @@ export function useCopyAssetMutation() {
 
   return useMutation({
     mutationFn: ({ projectId, assetId }: CopyAssetInput) =>
-      copyMockAsset(projectId, assetId),
+      assetApi.copy(projectId, assetId),
     onSuccess: (assetGroups, { projectId }) => {
       queryClient.setQueryData(assetKeys.library(projectId), assetGroups);
     },

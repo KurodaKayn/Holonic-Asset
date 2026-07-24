@@ -1,7 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { saveMockAssetRevision } from "@/adapters/mock-core-api/repository";
-import type { AssetEditorDocument } from "@/types/editor-document";
+import { assetApi } from "./asset.api";
+import { editorKeys } from "@/data/editor/editor.keys";
+import type {
+  AssetEditorDocument,
+  EditorDocumentData,
+} from "@/types/editor-document";
 import { assetKeys } from "./keys";
 
 type SaveAssetRevisionInput = {
@@ -19,9 +23,30 @@ export function useSaveAssetRevisionMutation() {
       assetId,
       editorDocument,
     }: SaveAssetRevisionInput) =>
-      saveMockAssetRevision(projectId, assetId, editorDocument),
-    onSuccess: (assetGroups, { projectId }) => {
+      assetApi.saveRevision(projectId, assetId, editorDocument),
+    onSuccess: async (assetGroups, { assetId, editorDocument, projectId }) => {
       queryClient.setQueryData(assetKeys.library(projectId), assetGroups);
+      const savedAsset = assetGroups
+        .flatMap((group) => group.assets)
+        .find((asset) => asset.id === assetId);
+      queryClient.setQueryData(
+        editorKeys.document(projectId, assetId),
+        (current: EditorDocumentData | undefined) =>
+          current && savedAsset
+            ? {
+                ...current,
+                asset: {
+                  ...current.asset,
+                  version: savedAsset.version,
+                  history: structuredClone(savedAsset.history),
+                },
+                document: structuredClone(editorDocument),
+              }
+            : current,
+      );
+      await queryClient.invalidateQueries({
+        queryKey: editorKeys.document(projectId, assetId),
+      });
     },
   });
 }

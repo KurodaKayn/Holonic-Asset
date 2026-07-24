@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { mockGenerationLifecycle } from "@/adapters/mock-core-api/generation-lifecycle";
+import { generationApi } from "./generation.api";
 import type {
   GenerationInput,
   GenerationLifecycleUpdate,
@@ -32,7 +32,7 @@ export function useEnqueueGenerationMutation() {
 
   return useMutation({
     mutationFn: (input: GenerationInput) =>
-      mockGenerationLifecycle.enqueue(input, projectUpdate),
+      generationApi.enqueue(input, projectUpdate),
     onSuccess: ({ assetGroups, run }) => {
       if (!assetGroups) return;
       queryClient.setQueryData(assetKeys.library(run.projectId), assetGroups);

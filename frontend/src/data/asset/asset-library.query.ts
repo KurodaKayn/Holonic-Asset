@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { listMockAssetGroups } from "@/adapters/mock-core-api/repository";
+import { assetApi } from "./asset.api";
 import { assetKeys } from "./keys";
 
 export function useAssetLibraryQuery(projectId: string | undefined) {
   return useQuery({
     queryKey: assetKeys.library(projectId ?? "unselected"),
-    queryFn: () => listMockAssetGroups(projectId!),
+    queryFn: () => assetApi.listGroups(projectId!),
     enabled: Boolean(projectId),
   });
 }

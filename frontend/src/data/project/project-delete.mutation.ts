@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { deleteMockProject } from "@/adapters/mock-core-api/repository";
+import { projectApi } from "./project.api";
 import { assetKeys } from "@/data/asset/keys";
 import { generationKeys } from "@/data/generation/keys";
 import type { ProjectSummary } from "@/types/project";
@@ -10,7 +10,7 @@ export function useDeleteProjectMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: deleteMockProject,
+    mutationFn: projectApi.delete,
     onSuccess: (_, projectId) => {
       queryClient.setQueryData<ProjectSummary[]>(
         projectKeys.list(),

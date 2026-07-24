@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { addMockAsset } from "@/adapters/mock-core-api/repository";
+import { assetApi } from "./asset.api";
 import type { ProjectAsset } from "@/types/asset";
 import type { AssetKind } from "@/types/asset-kind";
 import { assetKeys } from "./keys";
@@ -16,7 +16,7 @@ export function useAddAssetMutation() {
 
   return useMutation({
     mutationFn: ({ projectId, kind, asset }: AddAssetInput) =>
-      addMockAsset(projectId, kind, asset),
+      assetApi.add(projectId, kind, asset),
     onSuccess: (assetGroups, { projectId }) => {
       queryClient.setQueryData(assetKeys.library(projectId), assetGroups);
     },

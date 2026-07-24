@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { updateMockProject } from "@/adapters/mock-core-api/repository";
+import { projectApi } from "./project.api";
 import type { ProjectSummary } from "@/types/project";
 import { projectKeys } from "./keys";
 
@@ -8,7 +8,7 @@ export function useUpdateProjectMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: updateMockProject,
+    mutationFn: projectApi.update,
     onSuccess: (project) => {
       queryClient.setQueryData<ProjectSummary[]>(
         projectKeys.list(),

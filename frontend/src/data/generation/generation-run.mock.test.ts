@@ -6,7 +6,7 @@ import {
   removeMockGenerationRun,
   resetMockGenerationRepository,
   updateMockGenerationRun,
-} from "./generation-repository";
+} from "./generation-run.mock";
 
 afterEach(() => {
   resetMockGenerationRepository();

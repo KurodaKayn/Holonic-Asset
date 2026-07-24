@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   createMockGenerationRun,
   listMockGenerationRuns,
-} from "./generation-repository";
+} from "@/data/generation/generation-run.mock";
 import {
   addMockAsset,
   copyMockAsset,
@@ -13,7 +13,7 @@ import {
   listMockProjects,
   resetMockRepository,
   saveMockAssetRevision,
-} from "./repository";
+} from "./project-asset.mock";
 
 afterEach(() => {
   resetMockRepository();

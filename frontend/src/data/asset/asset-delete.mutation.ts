@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { deleteMockAsset } from "@/adapters/mock-core-api/repository";
+import { assetApi } from "./asset.api";
 import { assetKeys } from "./keys";
 
 type DeleteAssetInput = { projectId: string; assetId: string };
@@ -10,7 +10,7 @@ export function useDeleteAssetMutation() {
 
   return useMutation({
     mutationFn: ({ projectId, assetId }: DeleteAssetInput) =>
-      deleteMockAsset(projectId, assetId),
+      assetApi.delete(projectId, assetId),
     onSuccess: (assetGroups, { projectId }) => {
       queryClient.setQueryData(assetKeys.library(projectId), assetGroups);
     },
