@@ -2,6 +2,8 @@ import { useState } from "react";
 
 import {
   CharacterCanvas,
+  createDefaultCharacterDirections,
+  findCharacterAnimationGroup,
   getCharacterNodeLabel,
   type CharacterCanvasEvent,
   type CharacterCanvasNodeId,
@@ -10,6 +12,7 @@ import {
 import type {
   EditorCanvasPosition,
   EditorCharacterAnimation,
+  EditorCharacterSpriteSheet,
 } from "../../domain";
 
 import { AssetTree } from "../AssetTree/AssetTree";
@@ -19,6 +22,7 @@ import type { EditorModeProps } from "./types";
 export function CharacterEditorMode({
   prompt,
   history,
+  characterPrototype,
   characterAnimations,
   characterNodePositions,
   onAction,
@@ -26,6 +30,7 @@ export function CharacterEditorMode({
   onPromptChange,
   renderHeader,
 }: EditorModeProps & {
+  characterPrototype: EditorCharacterSpriteSheet;
   characterAnimations: EditorCharacterAnimation[];
   characterNodePositions: Record<string, EditorCanvasPosition>;
   onCharacterPositionChange: (
@@ -38,15 +43,32 @@ export function CharacterEditorMode({
       nodeIds: [],
       frames: [],
     });
+  const [activeDirections, setActiveDirections] = useState<
+    Record<string, CharacterCanvasNodeId>
+  >(() => createDefaultCharacterDirections(characterAnimations));
   const selection = canvasSelection.nodeIds.length
     ? canvasSelection.nodeIds
         .map((node) => getCharacterNodeLabel(node, characterAnimations))
         .join(", ")
     : "Nothing selected";
   const selectNode = (nodeId: CharacterCanvasNodeId) => {
+    const group = findCharacterAnimationGroup(nodeId, characterAnimations);
+    if (group) {
+      setActiveDirections((current) => ({
+        ...current,
+        [group.id]: nodeId,
+      }));
+    }
     setCanvasSelection({ nodeIds: [nodeId], frames: [] });
   };
   const selectFrame = (nodeId: CharacterCanvasNodeId, index: number) => {
+    const group = findCharacterAnimationGroup(nodeId, characterAnimations);
+    if (group) {
+      setActiveDirections((current) => ({
+        ...current,
+        [group.id]: nodeId,
+      }));
+    }
     setCanvasSelection({
       nodeIds: [nodeId],
       frames: [{ nodeId, index }],
@@ -55,6 +77,15 @@ export function CharacterEditorMode({
   const handleCanvasEvent = (event: CharacterCanvasEvent) => {
     if (event.type === "selection.changed") {
       setCanvasSelection(event.selection);
+      return;
+    }
+
+    if (event.type === "direction.changed") {
+      setActiveDirections((current) => ({
+        ...current,
+        [event.nodeId]: event.directionId,
+      }));
+      setCanvasSelection({ nodeIds: [event.directionId], frames: [] });
       return;
     }
 
@@ -74,7 +105,9 @@ export function CharacterEditorMode({
         />
         <CharacterCanvas
           model={{
+            prototype: characterPrototype,
             animations: characterAnimations,
+            activeDirections,
             nodePositions: characterNodePositions,
             selection: canvasSelection,
           }}
@@ -87,6 +120,7 @@ export function CharacterEditorMode({
           onPromptChange={onPromptChange}
           onAction={onAction}
           history={history}
+          animations={characterAnimations}
         />
       </div>
     </>

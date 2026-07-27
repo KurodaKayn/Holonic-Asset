@@ -20,12 +20,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type {
-  EditorCharacterAnimation,
-  EditorCharacterAnimationId,
+import {
+  isEditorCharacterAnimationGroup,
+  type EditorCharacterAnimation,
+  type EditorCharacterAnimationClip,
+  type EditorCharacterAnimationGroup,
 } from "../../domain";
 import {
-  characterNodeMeta,
+  getCharacterNodeLabel,
   type CharacterCanvasNodeId,
 } from "../../modules/character-canvas";
 
@@ -75,16 +77,27 @@ export function AssetTree({
             count={String(animations.length + animationNames.length)}
             onCreateAnimation={() => setIsCreateAnimationOpen(true)}
           >
-            {animations.map((animation) => (
-              <AnimationTreeItem
-                key={animation.id}
-                animation={animation}
-                selectedNode={selectedNode}
-                selectedFrames={selectedFrames}
-                onSelect={onSelect}
-                onSelectFrame={onSelectFrame}
-              />
-            ))}
+            {animations.map((animation) =>
+              isEditorCharacterAnimationGroup(animation) ? (
+                <AnimationGroupTreeItem
+                  key={animation.id}
+                  animation={animation}
+                  selectedNode={selectedNode}
+                  selectedFrames={selectedFrames}
+                  onSelect={onSelect}
+                  onSelectFrame={onSelectFrame}
+                />
+              ) : (
+                <AnimationTreeItem
+                  key={animation.id}
+                  animation={animation}
+                  selectedNode={selectedNode}
+                  selectedFrames={selectedFrames}
+                  onSelect={onSelect}
+                  onSelectFrame={onSelectFrame}
+                />
+              ),
+            )}
             {animationNames.map((name) => (
               <AddedAnimationTreeItem key={name} label={name} />
             ))}
@@ -202,7 +215,6 @@ function TreeItem({
     coral: "text-[#c36d6c]",
     neutral: "text-[#786f64]",
   };
-  const meta = characterNodeMeta[node];
   return (
     <button
       type="button"
@@ -211,7 +223,7 @@ function TreeItem({
     >
       <span className={colors[accent]}>{icon}</span>
       <span className="min-w-0 flex-1 truncate text-xs font-medium">
-        {meta.label}
+        {getCharacterNodeLabel(node, [])}
       </span>
     </button>
   );
@@ -224,13 +236,13 @@ function AnimationTreeItem({
   onSelect,
   onSelectFrame,
 }: {
-  animation: EditorCharacterAnimation;
+  animation: EditorCharacterAnimationClip;
   selectedNode: CharacterCanvasNodeId | null;
   selectedFrames: Array<{ nodeId: CharacterCanvasNodeId; index: number }>;
   onSelect: (node: CharacterCanvasNodeId) => void;
   onSelectFrame: (node: CharacterCanvasNodeId, index: number) => void;
 }) {
-  const node: EditorCharacterAnimationId = animation.id;
+  const node: CharacterCanvasNodeId = animation.id;
   const [open, setOpen] = useState(false);
   const frames = Array.from(
     { length: animation.frameCount },
@@ -295,6 +307,61 @@ function AnimationTreeItem({
               </button>
             );
           })}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function AnimationGroupTreeItem({
+  animation,
+  selectedNode,
+  selectedFrames,
+  onSelect,
+  onSelectFrame,
+}: {
+  animation: EditorCharacterAnimationGroup;
+  selectedNode: CharacterCanvasNodeId | null;
+  selectedFrames: Array<{
+    nodeId: CharacterCanvasNodeId;
+    index: number;
+  }>;
+  onSelect: (node: CharacterCanvasNodeId) => void;
+  onSelectFrame: (node: CharacterCanvasNodeId, index: number) => void;
+}) {
+  const [open, setOpen] = useState(true);
+
+  return (
+    <div>
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+        className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-[#71685d] transition-colors hover:bg-black/[.04] hover:text-[#2d2923]"
+      >
+        <Folder className="size-3.5 text-[#b86b70]" />
+        <span className="min-w-0 flex-1 truncate text-xs font-medium">
+          {animation.label}
+        </span>
+        <span className="font-mono text-[10px] text-[#81786d]">
+          {animation.directions.length}
+        </span>
+        <ChevronDown
+          className={`size-3.5 transition-transform ${open ? "rotate-0" : "-rotate-90"}`}
+        />
+      </button>
+      {open ? (
+        <div className="ml-4 mt-1 space-y-0.5 border-l border-black/10 pl-2">
+          {animation.directions.map((direction) => (
+            <AnimationTreeItem
+              key={direction.id}
+              animation={direction}
+              selectedNode={selectedNode}
+              selectedFrames={selectedFrames}
+              onSelect={onSelect}
+              onSelectFrame={onSelectFrame}
+            />
+          ))}
         </div>
       ) : null}
     </div>
