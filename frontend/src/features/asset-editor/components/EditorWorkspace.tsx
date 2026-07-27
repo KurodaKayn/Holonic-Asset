@@ -102,6 +102,9 @@ export function EditorWorkspace({
                 position,
               })
             }
+            onCharacterAnimationCreate={(label) =>
+              session.dispatch({ type: "character.animation.add", label })
+            }
           />
         );
       case "scenery":

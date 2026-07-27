@@ -27,6 +27,7 @@ export function CharacterEditorMode({
   characterNodePositions,
   onAction,
   onCharacterPositionChange,
+  onCharacterAnimationCreate,
   onPromptChange,
   renderHeader,
 }: EditorModeProps & {
@@ -37,6 +38,7 @@ export function CharacterEditorMode({
     nodeId: string,
     position: EditorCanvasPosition,
   ) => void;
+  onCharacterAnimationCreate: (label: string) => void;
 }) {
   const [canvasSelection, setCanvasSelection] =
     useState<CharacterCanvasSelection>({
@@ -102,6 +104,7 @@ export function CharacterEditorMode({
           selectedFrames={canvasSelection.frames}
           onSelect={selectNode}
           onSelectFrame={selectFrame}
+          onCreateAnimation={onCharacterAnimationCreate}
         />
         <CharacterCanvas
           model={{

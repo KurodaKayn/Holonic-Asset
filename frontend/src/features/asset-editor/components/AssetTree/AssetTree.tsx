@@ -37,6 +37,7 @@ type AssetTreeProps = {
   selectedFrames: Array<{ nodeId: CharacterCanvasNodeId; index: number }>;
   onSelect: (node: CharacterCanvasNodeId) => void;
   onSelectFrame: (node: CharacterCanvasNodeId, index: number) => void;
+  onCreateAnimation: (label: string) => void;
 };
 
 export function AssetTree({
@@ -45,10 +46,10 @@ export function AssetTree({
   selectedFrames,
   onSelect,
   onSelectFrame,
+  onCreateAnimation,
 }: AssetTreeProps) {
   const [isCreateAnimationOpen, setIsCreateAnimationOpen] = useState(false);
   const [animationName, setAnimationName] = useState("");
-  const [animationNames, setAnimationNames] = useState<string[]>([]);
 
   const handleCreateAnimation = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -56,7 +57,7 @@ export function AssetTree({
 
     if (!name) return;
 
-    setAnimationNames((current) => [...current, name]);
+    onCreateAnimation(name);
     setAnimationName("");
     setIsCreateAnimationOpen(false);
   };
@@ -74,7 +75,7 @@ export function AssetTree({
           />
           <FolderItem
             label="Animations"
-            count={String(animations.length + animationNames.length)}
+            count={String(animations.length)}
             onCreateAnimation={() => setIsCreateAnimationOpen(true)}
           >
             {animations.map((animation) =>
@@ -98,9 +99,6 @@ export function AssetTree({
                 />
               ),
             )}
-            {animationNames.map((name) => (
-              <AddedAnimationTreeItem key={name} label={name} />
-            ))}
           </FolderItem>
         </div>
       </ScrollArea>
@@ -174,23 +172,6 @@ function FolderItem({
       <div className="ml-4 mt-1 space-y-0.5 border-l border-black/10 pl-2">
         {children}
       </div>
-    </div>
-  );
-}
-
-function AddedAnimationTreeItem({ label }: { label: string }) {
-  return (
-    <div className="flex items-center rounded-lg text-[#71685d]">
-      <div className="flex min-w-0 flex-1 items-center gap-2 px-2 py-2">
-        <Play className="size-3.5 text-[#4c7e5e]" />
-        <span className="-mx-0.5 inline-flex cursor-pointer rounded p-0.5 text-[#a9a29a] transition-all hover:bg-black/[.06] hover:text-[#71685d] active:scale-90">
-          <Music2 className="size-3.5" aria-label="No audio" />
-        </span>
-        <span className="min-w-0 flex-1 truncate text-xs font-medium">
-          {label}
-        </span>
-      </div>
-      <ChevronDown className="mr-1 size-3.5 -rotate-90 text-[#81786d]" />
     </div>
   );
 }
