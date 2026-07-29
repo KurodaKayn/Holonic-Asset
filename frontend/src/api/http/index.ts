@@ -1,6 +1,4 @@
 export {
-  createHttpExecutor,
-  type HttpClientConfig,
+  httpRequest,
   type HttpRequest,
-  type HttpRequestExecutor,
 } from "./http-client";
