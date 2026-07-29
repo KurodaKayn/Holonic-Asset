@@ -1,5 +1,4 @@
 export { useCreateProjectMutation } from "./project-create.mutation";
-export { createProjectHttpExecutor, getProjectApiConfig } from "./project.http";
 export {
   toCreateProjectRequest,
   toProjectSummary as toProjectSummaryFromDto,

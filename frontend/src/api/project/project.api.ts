@@ -8,18 +8,18 @@ import { deleteMockProjectAssets } from "../asset/library/mock";
 import { deleteMockProjectGenerationRuns } from "../generation/run/mock";
 import { DataApiError } from "@/lib/data-api-error";
 import type { ProjectSummary } from "@/model";
+import { createHttpExecutor } from "../http";
 import { createProjectBackendApi } from "./project.contract";
-import { getProjectApiConfig, createProjectHttpExecutor } from "./project.http";
 import {
   toCreateProjectRequest,
   toProjectSummary,
   toUpdateProjectRequest,
 } from "./project.mapper";
 
-const projectApiConfig = getProjectApiConfig();
+const projectApiBaseUrl = import.meta.env.VITE_CORE_API_BASE_URL?.trim();
 const projectUserId = Number(import.meta.env.VITE_PROJECT_USER_ID);
-const projectBackendApi = projectApiConfig
-  ? createProjectBackendApi(createProjectHttpExecutor(projectApiConfig))
+const projectBackendApi = projectApiBaseUrl
+  ? createProjectBackendApi(createHttpExecutor({ baseUrl: projectApiBaseUrl }))
   : undefined;
 
 function requireProjectUserId() {
