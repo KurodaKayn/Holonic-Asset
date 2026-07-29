@@ -1,4 +1,1 @@
-export {
-  httpRequest,
-  type HttpRequest,
-} from "./http-client";
+export { httpRequest, type HttpRequest } from "./http-client";
