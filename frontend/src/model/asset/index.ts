@@ -8,6 +8,9 @@ export {
 export type {
   AssetGroup,
   AssetGroupsByProject,
+  AssetPreviewFrame,
+  AssetPreviewCrop,
+  AssetPreviewOffset,
   AssetRevision,
   ProjectAsset,
 } from "./library";

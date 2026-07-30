@@ -7,6 +7,8 @@ export function generateMockAnimation(
   return runMockRequest(
     () => {
       const isLargeCharacter = input.prototype.frameWidth >= 128;
+      const usesObjectSpriteSheet =
+        input.prototype.imageUrl.includes("/assets/object/");
       const frameCount = isLargeCharacter ? 5 : 8;
 
       return {
@@ -17,9 +19,11 @@ export function generateMockAnimation(
           frameCount,
           spriteSheet: {
             ...input.prototype,
-            imageUrl: isLargeCharacter
-              ? "/assets/characters/knight/attack-1.png"
-              : "/assets/characters/swordsman/attack-front.png",
+            imageUrl: usesObjectSpriteSheet
+              ? input.prototype.imageUrl
+              : isLargeCharacter
+                ? "/assets/characters/knight/attack-1.png"
+                : "/assets/characters/swordsman/attack-front.png",
             columns: frameCount,
             rows: 1,
             row: undefined,

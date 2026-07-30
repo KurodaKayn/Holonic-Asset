@@ -1,4 +1,9 @@
-export type { ProjectAsset } from "./asset";
+export type {
+  AssetPreviewFrame,
+  AssetPreviewOffset,
+  AssetPreviewCrop,
+  ProjectAsset,
+} from "./asset";
 export {
   assetKinds,
   creatableAssetKinds,
