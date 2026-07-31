@@ -1,15 +1,11 @@
-export const assetKinds = [
-  "character",
-  "object",
-  "tileset",
-  "scenery",
-  "audio",
-  "ui",
-] as const;
+import type { AssetKind } from "@/features/assets/types";
 
-export type AssetKind = (typeof assetKinds)[number];
-
-export type CreatableAssetKind = AssetKind;
+export {
+  assetKinds,
+  creatableAssetKinds,
+  type AssetKind,
+  type CreatableAssetKind,
+} from "@/features/assets/types";
 
 export const defaultAssetCanvasSize = "32 × 32 px";
 
@@ -25,12 +21,3 @@ const defaultCanvasSizeByAssetKind: Record<AssetKind, string> = {
 export function getDefaultAssetCanvasSize(kind: AssetKind) {
   return defaultCanvasSizeByAssetKind[kind];
 }
-
-export const creatableAssetKinds: CreatableAssetKind[] = [
-  "character",
-  "object",
-  "tileset",
-  "scenery",
-  "ui",
-  "audio",
-];

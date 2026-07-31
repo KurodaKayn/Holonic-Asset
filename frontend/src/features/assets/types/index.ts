@@ -1,4 +1,13 @@
-export type { ProjectAsset } from "./asset";
+export type {
+  Asset,
+  AssetAnimation,
+  AssetPreviewCrop,
+  AssetPreviewFrame,
+  AssetPreviewOffset,
+  ProjectAsset,
+  SceneryAssetData,
+  SceneryLayer,
+} from "./asset";
 export {
   assetKinds,
   creatableAssetKinds,

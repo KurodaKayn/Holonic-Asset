@@ -1,7 +1,7 @@
 export { recordQueryOptions, useSuspenseRecordQuery } from "./record.query";
 export { useSaveAssetRevisionMutation } from "./revision.mutation";
 export { useGenerateAnimationMutation } from "./animation-generation.mutation";
-export { editorModeForAssetKind } from "./editor-record";
+export { editorModeForAssetKind } from "@/features/asset-editor/types";
 export { isEditorRecordForAssetKind } from "./editor-record.validation";
 export type {
   GenerateAnimationInput,
