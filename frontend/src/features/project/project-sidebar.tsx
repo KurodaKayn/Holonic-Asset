@@ -18,30 +18,17 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { ProjectSummary } from "./types";
 import { ProjectSettingsDialog } from "./project-settings-dialog";
-
-type ProjectSidebarProps = {
-  isProjectRoute: boolean;
-  onCreateProject: () => void;
-  onDeleteProject: (projectId: string) => void;
-  onSelectProject: (projectId: string) => void;
-  onUpdateProject: (project: ProjectSummary) => void;
-  projects: ProjectSummary[];
-  selectedProjectId?: string;
-};
+import type { ProjectLibraryProjectModel } from "./state/use-project-library";
 
 export function ProjectSidebar({
-  isProjectRoute,
-  onCreateProject,
-  onDeleteProject,
-  onSelectProject,
-  onUpdateProject,
-  projects,
-  selectedProjectId,
-}: ProjectSidebarProps) {
+  library,
+}: {
+  library: ProjectLibraryProjectModel;
+}) {
   const [isOpen, setIsOpen] = useState(true);
+  const { create, items, remove, select, selectedId, update } = library;
 
-  const isSelected = (projectId: string) =>
-    isProjectRoute && projectId === selectedProjectId;
+  const isSelected = (projectId: string) => projectId === selectedId;
   const projectButton = (project: ProjectSummary, compact = false) => (
     <Button
       key={project.id}
@@ -57,7 +44,7 @@ export function ProjectSidebar({
           ? undefined
           : "min-w-0 flex-1 justify-start rounded-md px-1.5 py-1"
       }
-      onClick={() => onSelectProject(project.id)}
+      onClick={() => void select(project.id)}
     >
       <Folder className="size-4 shrink-0 text-muted-foreground" />
       {compact ? null : (
@@ -110,13 +97,13 @@ export function ProjectSidebar({
             <Button
               type="button"
               className="mb-4 w-full justify-start"
-              onClick={onCreateProject}
+              onClick={() => void create()}
             >
               <Plus data-icon="inline-start" />
               New Project
             </Button>
             <div className="space-y-2">
-              {projects.map((project) => (
+              {items.map((project) => (
                 <div
                   key={project.id}
                   className={cn(
@@ -129,7 +116,7 @@ export function ProjectSidebar({
                   {projectButton(project)}
                   <ProjectSettingsDialog
                     project={project}
-                    onSave={onUpdateProject}
+                    onSave={update}
                     iconOnly
                   />
                   <AlertDialog>
@@ -159,7 +146,7 @@ export function ProjectSidebar({
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
                           variant="destructive"
-                          onClick={() => onDeleteProject(project.id)}
+                          onClick={() => void remove(project.id)}
                         >
                           Delete project
                         </AlertDialogAction>
@@ -177,11 +164,11 @@ export function ProjectSidebar({
               aria-label="New Project"
               variant="outline"
               size="icon-lg"
-              onClick={onCreateProject}
+              onClick={() => void create()}
             >
               <Plus />
             </Button>
-            {projects.map((project) => projectButton(project, true))}
+            {items.map((project) => projectButton(project, true))}
           </div>
         )}
 
@@ -191,11 +178,11 @@ export function ProjectSidebar({
             aria-label="New Project"
             variant="outline"
             size="icon-lg"
-            onClick={onCreateProject}
+            onClick={() => void create()}
           >
             <Plus />
           </Button>
-          {projects.map((project) => projectButton(project, true))}
+          {items.map((project) => projectButton(project, true))}
         </div>
       </div>
     </aside>

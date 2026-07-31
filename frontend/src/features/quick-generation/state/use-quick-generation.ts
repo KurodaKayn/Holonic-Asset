@@ -81,3 +81,5 @@ export function useQuickGeneration() {
     },
   };
 }
+
+export type QuickGenerationController = ReturnType<typeof useQuickGeneration>;

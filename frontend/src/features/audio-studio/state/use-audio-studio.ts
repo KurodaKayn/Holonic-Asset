@@ -73,25 +73,26 @@ export function useAudioStudio() {
   }
 
   return {
-    actionError,
-    addTrack,
-    duration,
-    generateVariation,
-    isLoading: tracksQuery.isPending,
-    isMutating,
-    loadError: tracksQuery.error,
-    masterMuted,
-    playing,
-    prompt,
-    reload: tracksQuery.refetch,
-    removeTrack,
-    setDuration,
-    setPrompt,
-    setTime,
-    time,
-    toggleMasterMuted: () => setMasterMuted((value) => !value),
-    togglePlaying: () => setPlaying((value) => !value),
-    toggleTrack,
-    tracks,
+    model: { duration, masterMuted, playing, prompt, time, tracks },
+    status: {
+      actionError,
+      isLoading: tracksQuery.isPending,
+      isMutating,
+      loadError: tracksQuery.error,
+    },
+    actions: {
+      addTrack,
+      generateVariation,
+      reload: tracksQuery.refetch,
+      removeTrack,
+      setDuration,
+      setPrompt,
+      setTime,
+      toggleMasterMuted: () => setMasterMuted((value) => !value),
+      togglePlaying: () => setPlaying((value) => !value),
+      toggleTrack,
+    },
   };
 }
+
+export type AudioStudioController = ReturnType<typeof useAudioStudio>;
