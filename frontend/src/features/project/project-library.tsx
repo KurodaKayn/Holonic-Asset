@@ -1,7 +1,6 @@
 import { AppHeader } from "@/components/layouts/app-header";
 import { ProjectChrome } from "@/components/layouts/project-chrome";
-import { AssetLibraryWorkspace, creatableAssetKinds } from "@/features/assets";
-import { CreateAssetToolbar, GenerationQueue } from "@/features/generation";
+import { AssetLibrary } from "@/features/assets";
 
 import { ProjectSidebar } from "./project-sidebar";
 import { useProjectLibrary } from "./state/use-project-library";
@@ -27,24 +26,9 @@ export function ProjectLibrary() {
           />
         }
       >
-        <AssetLibraryWorkspace
-          assetGroups={library.assetLibrary.groups}
+        <AssetLibrary
           project={library.project.current}
-          query={library.assetLibrary.query}
-          generationQueue={<GenerationQueue runs={library.generation.runs} />}
-          creationControl={
-            library.project.current ? (
-              <CreateAssetToolbar
-                assetKinds={creatableAssetKinds}
-                project={library.project.current}
-                onCreate={library.assetLibrary.createAsset}
-              />
-            ) : null
-          }
-          onCopyAsset={library.assetLibrary.copyAsset}
-          onDeleteAsset={library.assetLibrary.deleteAsset}
-          onOpenAsset={library.assetLibrary.openAsset}
-          onQueryChange={library.assetLibrary.changeQuery}
+          onOpenAsset={library.openAsset}
         />
       </ProjectChrome>
     </div>

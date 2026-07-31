@@ -1,38 +1,16 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { GenerationQueue } from "@/features/generation/generation-queue";
 
-import { useAssetLibrary } from "./state/useAssetLibrary";
-import type { ProjectSummary } from "@/features/project";
-import type { AssetGroup } from "./types";
 import { AssetCard } from "./asset-card";
 import { AssetLibraryToolbar } from "./asset-library-toolbar";
-
-type AssetLibraryWorkspaceProps = {
-  assetGroups: AssetGroup[];
-  creationControl: React.ReactNode;
-  generationQueue: React.ReactNode;
-  onCopyAsset: (assetId: string) => void;
-  onDeleteAsset: (assetId: string) => void;
-  onOpenAsset: (assetId: string) => void;
-  onQueryChange: (query: string) => void;
-  project?: ProjectSummary;
-  query: string;
-};
+import type { AssetLibraryController } from "./state/use-asset-library-controller";
 
 export function AssetLibraryWorkspace({
-  assetGroups,
-  creationControl,
-  generationQueue,
-  onCopyAsset,
-  onDeleteAsset,
-  onOpenAsset,
-  onQueryChange,
-  project,
-  query,
-}: AssetLibraryWorkspaceProps) {
-  const { filteredAssets, selectedKinds, setSelectedKinds } = useAssetLibrary(
-    assetGroups,
-    query,
-  );
+  library,
+}: {
+  library: AssetLibraryController;
+}) {
+  const { filteredAssets, generationRuns, project } = library;
 
   if (!project) {
     return (
@@ -49,16 +27,10 @@ export function AssetLibraryWorkspace({
     <ScrollArea className="h-full">
       <div className="mx-auto w-full max-w-[96rem] px-5 py-7 sm:px-8 sm:py-9">
         <div className="pb-10 sm:pb-12">
-          <AssetLibraryToolbar
-            query={query}
-            selectedKinds={selectedKinds}
-            creationControl={creationControl}
-            onQueryChange={onQueryChange}
-            onSelectedKindsChange={setSelectedKinds}
-          />
+          <AssetLibraryToolbar library={library} />
         </div>
 
-        {generationQueue}
+        <GenerationQueue runs={generationRuns} />
 
         {filteredAssets.length > 0 ? (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
@@ -69,9 +41,9 @@ export function AssetLibraryWorkspace({
                 accentClassName={asset.accentClassName}
                 kind={asset.kind}
                 kindLabel={asset.kindLabel}
-                onOpen={() => onOpenAsset(asset.id)}
-                onCopy={() => onCopyAsset(asset.id)}
-                onDelete={() => onDeleteAsset(asset.id)}
+                onOpen={() => library.openAsset(asset.id)}
+                onCopy={() => library.copyAsset(asset.id)}
+                onDelete={() => library.deleteAsset(asset.id)}
               />
             ))}
           </div>

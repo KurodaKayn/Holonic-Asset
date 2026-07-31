@@ -4,16 +4,10 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import {
   reconcileProjectSelection,
   removeProjectSelection,
-  useAssetLibraryQuery,
-  useCopyAssetMutation,
-  useDeleteAssetMutation,
   useDeleteProjectMutation,
-  useEnqueueGenerationMutation,
-  useGenerationRunsQuery,
   useProjectListQuery,
   useUpdateProjectMutation,
 } from "@/model";
-import type { CreationRequest } from "@/features/generation";
 
 import type { ProjectSummary } from "../types";
 
@@ -22,11 +16,6 @@ export function useProjectLibrary() {
   const search = useSearch({ from: "/projects" });
   const { data: projects = [], isSuccess: projectsLoaded } =
     useProjectListQuery();
-  const { data: assetGroups = [] } = useAssetLibraryQuery(search.project);
-  const { data: runs = [] } = useGenerationRunsQuery(search.project);
-  const { mutate: copyAsset } = useCopyAssetMutation();
-  const { mutate: deleteAsset } = useDeleteAssetMutation();
-  const { mutate: enqueueRun } = useEnqueueGenerationMutation();
   const { mutateAsync: deleteProject } = useDeleteProjectMutation();
   const { mutate: updateProject } = useUpdateProjectMutation();
   const project = projects.find((item) => item.id === search.project);
@@ -84,37 +73,6 @@ export function useProjectLibrary() {
     [navigate, project, search.project, search.q],
   );
 
-  const changeQuery = useCallback(
-    (q: string) =>
-      navigate({
-        to: "/projects",
-        search: { project: search.project, q },
-        replace: true,
-      }),
-    [navigate, search.project],
-  );
-
-  const createAsset = useCallback(
-    (request: CreationRequest) => {
-      if (project) enqueueRun({ projectId: project.id, request });
-    },
-    [enqueueRun, project],
-  );
-
-  const copyProjectAsset = useCallback(
-    (assetId: string) => {
-      if (project) copyAsset({ projectId: project.id, assetId });
-    },
-    [copyAsset, project],
-  );
-
-  const deleteProjectAsset = useCallback(
-    (assetId: string) => {
-      if (project) deleteAsset({ projectId: project.id, assetId });
-    },
-    [deleteAsset, project],
-  );
-
   return {
     project: {
       current: project,
@@ -125,15 +83,6 @@ export function useProjectLibrary() {
       select: selectProject,
       update: (updatedProject: ProjectSummary) => updateProject(updatedProject),
     },
-    assetLibrary: {
-      groups: assetGroups,
-      query: search.q ?? "",
-      changeQuery,
-      copyAsset: copyProjectAsset,
-      createAsset,
-      deleteAsset: deleteProjectAsset,
-      openAsset,
-    },
-    generation: { runs },
+    openAsset,
   };
 }

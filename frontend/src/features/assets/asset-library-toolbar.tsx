@@ -1,23 +1,26 @@
 import { Search } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
+import { CreateAssetToolbar } from "@/features/generation/create-asset-toolbar";
 
-import type { AssetKind } from "./types";
 import { AssetFilters } from "./asset-filters";
+import { creatableAssetKinds } from "./types";
+import type { AssetLibraryController } from "./state/use-asset-library-controller";
 
 export function AssetLibraryToolbar({
-  query,
-  selectedKinds,
-  creationControl,
-  onQueryChange,
-  onSelectedKindsChange,
+  library,
 }: {
-  query: string;
-  selectedKinds: AssetKind[];
-  creationControl: React.ReactNode;
-  onQueryChange: (query: string) => void;
-  onSelectedKindsChange: (kinds: AssetKind[]) => void;
+  library: AssetLibraryController;
 }) {
+  const {
+    createAsset,
+    project,
+    query,
+    selectedKinds,
+    setQuery,
+    setSelectedKinds,
+  } = library;
+
   return (
     <div className="flex w-full flex-col gap-3 rounded-3xl border bg-card p-3 shadow-sm lg:flex-row lg:items-center lg:justify-between">
       <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -29,15 +32,21 @@ export function AssetLibraryToolbar({
             placeholder="Search assets"
             type="search"
             value={query}
-            onChange={(event) => onQueryChange(event.target.value)}
+            onChange={(event) => setQuery(event.target.value)}
           />
         </div>
         <AssetFilters
           selectedKinds={selectedKinds}
-          onSelectedKindsChange={onSelectedKindsChange}
+          onSelectedKindsChange={setSelectedKinds}
         />
       </div>
-      {creationControl}
+      {project ? (
+        <CreateAssetToolbar
+          assetKinds={creatableAssetKinds}
+          project={project}
+          onCreate={createAsset}
+        />
+      ) : null}
     </div>
   );
 }
