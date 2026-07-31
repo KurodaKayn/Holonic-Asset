@@ -11,7 +11,25 @@ import {
 
 import type { ProjectSummary } from "../types";
 
-export function useProjectLibrary() {
+export type ProjectLibraryProjectModel = {
+  current?: ProjectSummary;
+  items: ProjectSummary[];
+  selectedId?: string;
+  create: () => Promise<unknown>;
+  remove: (projectId: string) => Promise<void>;
+  select: (
+    projectId: string | undefined,
+    replace?: boolean,
+  ) => Promise<unknown>;
+  update: (project: ProjectSummary) => void;
+};
+
+export type ProjectLibraryController = {
+  project: ProjectLibraryProjectModel;
+  openAsset: (assetId: string) => void;
+};
+
+export function useProjectLibrary(): ProjectLibraryController {
   const navigate = useNavigate({ from: "/projects" });
   const search = useSearch({ from: "/projects" });
   const { data: projects = [], isSuccess: projectsLoaded } =
