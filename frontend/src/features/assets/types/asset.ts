@@ -33,6 +33,28 @@ export type ProjectAsset = {
   id: string;
   name: string;
   description: string;
+  previewImageUrl?: string;
+  previewFrame?: {
+    columns: number;
+    rows: number;
+    column: number;
+    row: number;
+    frameWidth?: number;
+    frameHeight?: number;
+    offsetX?: number;
+    displayWidth?: string;
+  };
+  previewCrop?: {
+    sourceWidth: number;
+    sourceHeight: number;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    displayOffsetY?: string;
+  };
+  previewOffset?: { x: string; y: string };
+  previewScale?: number;
   version: string;
   canvasSize: string;
   perspective: string;

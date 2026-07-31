@@ -31,6 +31,17 @@ const knightPrototype: EditorCharacterSpriteSheet = {
   rows: 1,
 };
 
+const objectSpriteSheetUrl = "/assets/object/Alchemy_Table_02-Sheet.png";
+
+const objectPrototype: EditorCharacterSpriteSheet = {
+  format: "png-sprite-sheet",
+  imageUrl: objectSpriteSheetUrl,
+  frameWidth: 48,
+  frameHeight: 64,
+  columns: 1,
+  rows: 1,
+};
+
 function createPngAnimation(
   id: string,
   label: string,
@@ -114,6 +125,22 @@ const characterAnimationsByAssetId: Record<string, EditorCharacterAnimation[]> =
       ),
     ],
   };
+
+const objectAnimations: EditorCharacterAnimation[] = [
+  createPngAnimation("idle", "Alchemy", objectSpriteSheetUrl, 11, 48, 64),
+  {
+    ...createPngAnimation("steam", "Brew", objectSpriteSheetUrl, 11, 48, 64),
+    spriteSheet: {
+      format: "png-sprite-sheet",
+      imageUrl: objectSpriteSheetUrl,
+      frameWidth: 48,
+      frameHeight: 64,
+      columns: 11,
+      rows: 1,
+      row: 3,
+    },
+  },
+];
 
 const characterPrototypesByAssetId: Record<string, EditorCharacterSpriteSheet> =
   {
@@ -273,17 +300,22 @@ export function createDefaultEditorRecord<K extends AssetKind>(
 
   if (kind === "character" || kind === "object") {
     const sourceId = getCharacterDefaultSourceId(asset.id);
+    const isObject = kind === "object";
     return {
       mode: "character",
       ...base,
       character: {
         prototype: structuredClone(
-          characterPrototypesByAssetId[sourceId] ??
-            createFallbackCharacterPrototype(asset),
+          isObject
+            ? objectPrototype
+            : (characterPrototypesByAssetId[sourceId] ??
+                createFallbackCharacterPrototype(asset)),
         ),
         animations: structuredClone(
-          characterAnimationsByAssetId[sourceId] ??
-            createFallbackCharacterAnimations(),
+          isObject
+            ? objectAnimations
+            : (characterAnimationsByAssetId[sourceId] ??
+                createFallbackCharacterAnimations()),
         ),
         nodePositions: {},
       },
