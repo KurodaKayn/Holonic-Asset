@@ -111,7 +111,7 @@ const moonlitOrchardAssetGroups: AssetGroup[] = [
         perspective: "Front view",
         tags: ["prop", "wood"],
       }),
-    ],
+    ].filter((asset) => asset.id === "copper-watering-can"),
   },
   {
     kind: "tileset",
@@ -144,7 +144,7 @@ const moonlitOrchardAssetGroups: AssetGroup[] = [
         perspective: "Top-down",
         tags: ["terrain", "water"],
       }),
-    ],
+    ].filter((asset) => asset.id === "orchard-ground-set"),
   },
   {
     kind: "scenery",
