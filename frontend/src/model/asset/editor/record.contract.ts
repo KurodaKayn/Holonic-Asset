@@ -1,19 +1,22 @@
 import type {
   EditorRecord,
   EditorWorkspaceData,
-} from "@/features/asset-editor/types";
-import type { AssetRevision } from "@/features/assets/types";
+} from "@/features/asset-editor";
+import type { AssetRevision } from "@/features/assets";
 
 export type GetEditorRecordInput = {
-  projectId: string;
   assetId: string;
 };
 
-export type SaveEditorRecordInput = GetEditorRecordInput & {
+export type SaveEditorRecordInput = {
+  projectId: string;
+  assetId: string;
   record: EditorRecord;
 };
 
-export type EditorRecordSaveResult = GetEditorRecordInput & {
+export type EditorRecordSaveResult = {
+  projectId: string;
+  assetId: string;
   record: EditorRecord;
   version: string;
   history: AssetRevision[];

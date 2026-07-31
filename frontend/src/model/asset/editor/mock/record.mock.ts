@@ -6,10 +6,8 @@ import {
   mergeEditorRecord,
 } from "./record-defaults";
 import { runMockRequest, type MockRequestOptions } from "@/lib/mock-request";
-import {
-  isEditorRecordForAssetKind,
-  type EditorWorkspaceData,
-} from "@/features/asset-editor/types";
+import { isEditorRecordForAssetKind } from "../editor-record.validation";
+import type { EditorWorkspaceData } from "@/features/asset-editor";
 import type {
   GetEditorRecordInput,
   SaveEditorRecordInput,
@@ -20,41 +18,50 @@ export function getMockEditorRecord(
   options?: MockRequestOptions,
 ) {
   return runMockRequest(async (): Promise<EditorWorkspaceData> => {
-    const [projects, groups] = await Promise.all([
-      listMockProjects(),
-      assetApi.listGroups(input.projectId),
-    ]);
-    const project = projects.find((item) => item.id === input.projectId);
-    if (!project) {
-      throw new DataApiError("NOT_FOUND", "Project was not found.", {
-        projectId: input.projectId,
-      });
+    const projects = await listMockProjects();
+    let match:
+      | {
+          project: (typeof projects)[number];
+          group: Awaited<ReturnType<typeof assetApi.listGroups>>[number];
+        }
+      | undefined;
+
+    for (const project of projects) {
+      const groups = await assetApi.listGroups(project.id);
+      const group = groups.find((item) =>
+        item.assets.some((asset) => asset.id === input.assetId),
+      );
+      if (group) {
+        match = { project, group };
+        break;
+      }
     }
 
-    const group = groups.find((item) =>
-      item.assets.some((asset) => asset.id === input.assetId),
-    );
-    const asset = group?.assets.find((item) => item.id === input.assetId);
-    if (!group || !asset) {
+    const asset = match?.group.assets.find((item) => item.id === input.assetId);
+    if (!match || !asset) {
       throw new DataApiError("NOT_FOUND", "Asset was not found.", input);
     }
 
     const currentRevision = asset.history.find(
       (revision) => revision.isCurrent,
     );
-    const fallback = createDefaultEditorRecord(group.kind, asset);
+    const fallback = createDefaultEditorRecord(match.group.kind, asset);
 
     return {
-      projectName: project.name,
+      projectName: match.project.name,
       asset: {
         id: asset.id,
-        projectId: input.projectId,
-        kind: group.kind,
+        projectId: match.project.id,
+        kind: match.group.kind,
         name: asset.name,
         version: asset.version,
         history: structuredClone(asset.history),
       },
-      record: mergeEditorRecord(group.kind, fallback, currentRevision?.content),
+      record: mergeEditorRecord(
+        match.group.kind,
+        fallback,
+        currentRevision?.content,
+      ),
     } as EditorWorkspaceData;
   }, options);
 }

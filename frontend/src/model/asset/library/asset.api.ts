@@ -5,11 +5,8 @@ import {
   listMockAssetGroups,
   saveMockAssetRevision,
 } from "./mock";
-import {
-  getDefaultAssetCanvasSize,
-  type AssetKind,
-  type ProjectAsset,
-} from "@/features/assets/types";
+import type { AssetKind, ProjectAsset } from "@/features/assets";
+import { getDefaultAssetCanvasSize } from "./asset-canvas-size";
 import { getEnvelope, postEnvelope } from "@/model/fetchers";
 
 export type AssetType =

@@ -1,6 +1,7 @@
 export {
   assetApi,
   assetKeys,
+  getDefaultAssetCanvasSize,
   useAddAudioTrackMutation,
   useAssetLibraryQuery,
   useAudioTracksQuery,
@@ -9,8 +10,9 @@ export {
   useDeleteAudioTrackMutation,
   useGenerateAnimationMutation,
   useGenerateAudioVariationMutation,
-  useRecordQuery,
+  recordQueryOptions,
   useSaveAssetRevisionMutation,
+  useSuspenseRecordQuery,
   useUpdateAudioTrackMutation,
 } from "./asset";
 export { coreAssetApi } from "./asset/library/asset.api";
@@ -69,3 +71,9 @@ export type {
 } from "./project/project.api";
 export { uploadApi } from "./upload";
 export type { CreateUploadTargetRequest, UploadTarget } from "./upload";
+export type {
+  GenerateAnimationInput,
+  GenerateAnimationRequest,
+  GenerateAnimationResult,
+  GeneratedEditorCharacterAnimation,
+} from "./asset";

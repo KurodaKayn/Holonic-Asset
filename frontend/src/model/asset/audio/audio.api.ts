@@ -10,7 +10,7 @@ import type {
   AudioTrack,
   GenerateAudioVariationInput,
   UpdateAudioTrackInput,
-} from "@/features/audio-studio/types";
+} from "@/features/audio-studio";
 
 export type AudioApi = {
   listTracks: () => Promise<AudioTrack[]>;

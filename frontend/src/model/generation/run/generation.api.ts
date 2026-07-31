@@ -1,8 +1,6 @@
 import { enqueueMockGeneration, listMockGenerationRuns } from "./mock";
-import type {
-  GenerationInput,
-  GenerationRun,
-} from "@/features/generation/types";
+import type { GenerationRun } from "@/features/generation";
+import type { GenerationInput } from "./generation-lifecycle";
 import { getJson, postJson } from "@/model/fetchers";
 
 export type GenerationTaskType =

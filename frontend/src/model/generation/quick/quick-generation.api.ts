@@ -6,7 +6,7 @@ import {
 import type {
   GenerateQuickAssetInput,
   QuickGenerationAsset,
-} from "@/features/quick-generation/types";
+} from "@/features/quick-generation";
 
 export type QuickGenerationApi = {
   listAssets: () => Promise<QuickGenerationAsset[]>;

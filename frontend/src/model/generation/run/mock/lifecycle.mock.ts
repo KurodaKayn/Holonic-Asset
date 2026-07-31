@@ -8,7 +8,7 @@ import { addMockAsset } from "../../../asset/library/mock";
 import {
   createGenerationLifecycle,
   type GenerationInput,
-} from "@/features/generation/types";
+} from "../generation-lifecycle";
 import { hasMockProject } from "../../../project/mock";
 
 export const mockGenerationLifecycle = createGenerationLifecycle({

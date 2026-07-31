@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { assetKeys } from "../library/keys";
-import type { EditorWorkspaceData } from "@/features/asset-editor/types";
+import type { EditorWorkspaceData } from "@/features/asset-editor";
 import { recordApi } from "./record.api";
 import { recordKeys } from "./record.keys";
 
@@ -12,7 +12,7 @@ export function useSaveAssetRevisionMutation() {
     mutationFn: recordApi.saveRevision,
     onSuccess: async (saved, { assetId, projectId }) => {
       queryClient.setQueryData(
-        recordKeys.detail(projectId, assetId),
+        recordKeys.detail(assetId),
         (current: EditorWorkspaceData | undefined) =>
           current
             ? {
@@ -31,7 +31,7 @@ export function useSaveAssetRevisionMutation() {
           queryKey: assetKeys.library(projectId),
         }),
         queryClient.invalidateQueries({
-          queryKey: recordKeys.detail(projectId, assetId),
+          queryKey: recordKeys.detail(assetId),
         }),
       ]);
     },

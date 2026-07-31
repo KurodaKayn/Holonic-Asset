@@ -1,15 +1,15 @@
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
 import { recordApi } from "./record.api";
 import { recordKeys } from "./record.keys";
 
-export function recordQueryOptions(projectId: string, assetId: string) {
+export function recordQueryOptions(assetId: string) {
   return queryOptions({
-    queryKey: recordKeys.detail(projectId, assetId),
-    queryFn: () => recordApi.get({ projectId, assetId }),
+    queryKey: recordKeys.detail(assetId),
+    queryFn: () => recordApi.get({ assetId }),
   });
 }
 
-export function useRecordQuery(projectId: string, assetId: string) {
-  return useQuery(recordQueryOptions(projectId, assetId));
+export function useSuspenseRecordQuery(assetId: string) {
+  return useSuspenseQuery(recordQueryOptions(assetId));
 }

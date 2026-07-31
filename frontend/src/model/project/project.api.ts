@@ -7,7 +7,7 @@ import {
 } from "./mock";
 import { deleteMockProjectAssets } from "../asset/library/mock";
 import { deleteMockProjectGenerationRuns } from "../generation/run/mock";
-import type { ProjectSummary } from "@/features/project/types";
+import type { ProjectSummary } from "@/features/project";
 import { getJson, postJson } from "@/model/fetchers";
 
 export type ProjectGameType = "RPG" | "ACT" | "SLG" | "Other";

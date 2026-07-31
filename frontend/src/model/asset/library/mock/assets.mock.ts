@@ -2,7 +2,7 @@ import type {
   AssetGroupsByProject,
   AssetKind,
   ProjectAsset,
-} from "@/features/assets/types";
+} from "@/features/assets";
 import { assetGroupsByProject as seededAssetGroups } from "./assets.seed";
 
 let assetGroupsByProject = createAssetState();

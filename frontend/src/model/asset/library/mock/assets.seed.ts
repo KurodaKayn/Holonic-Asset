@@ -3,7 +3,7 @@ import type {
   AssetGroupsByProject,
   AssetRevision,
   ProjectAsset,
-} from "@/features/assets/types";
+} from "@/features/assets";
 
 function createHistory(
   assetId: string,

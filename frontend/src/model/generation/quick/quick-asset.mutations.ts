@@ -5,7 +5,7 @@ import {
   type QueryClient,
 } from "@tanstack/react-query";
 
-import type { QuickGenerationAsset } from "@/features/quick-generation/types";
+import type { QuickGenerationAsset } from "@/features/quick-generation";
 import { quickGenerationApi } from "./quick-generation.api";
 import { quickGenerationKeys } from "./quick-generation.keys";
 

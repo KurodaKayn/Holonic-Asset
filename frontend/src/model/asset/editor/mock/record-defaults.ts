@@ -1,4 +1,4 @@
-import type { AssetKind, ProjectAsset } from "@/features/assets/types";
+import type { AssetKind, ProjectAsset } from "@/features/assets";
 import type {
   CharacterEditorRecord,
   EditorCharacterAnimation,
@@ -10,8 +10,8 @@ import type {
   TilesetEditorRecord,
   UiEditorRecord,
   AudioEditorRecord,
-} from "@/features/asset-editor/types";
-import { isEditorRecordForAssetKind } from "@/features/asset-editor/types";
+} from "@/features/asset-editor";
+import { isEditorRecordForAssetKind } from "../editor-record.validation";
 
 const swordsmanPrototype: EditorCharacterSpriteSheet = {
   format: "png-sprite-sheet",
