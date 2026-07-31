@@ -15,7 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import type { AssetKind, ProjectAsset } from "./types";
+import type { ProjectAsset } from "@/model";
+import type { AssetKind } from "@/model";
 import { AssetTypeIcon } from "./asset-type-icon";
 import { AssetPreview } from "./asset-preview";
 
@@ -38,7 +39,7 @@ export function AssetCard({
 }) {
   return (
     <Card
-      className="group relative gap-0 overflow-hidden rounded-xl py-0 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/50"
+      className="group relative h-full gap-0 overflow-hidden rounded-xl py-0 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/50"
       size="sm"
     >
       <button
@@ -47,12 +48,17 @@ export function AssetCard({
         className="absolute inset-0 z-0 rounded-xl focus-visible:outline-none"
         onClick={onOpen}
       />
-      <div className="pointer-events-none relative z-10">
+      <div className="pointer-events-none relative z-10 flex h-full flex-col">
         <AssetPreview
           accentClassName={accentClassName}
-          className="aspect-[4/3]"
+          imageUrl={asset.previewImageUrl}
+          previewFrame={asset.previewFrame}
+          previewCrop={asset.previewCrop}
+          previewOffset={asset.previewOffset}
+          previewScale={asset.previewScale}
+          className="aspect-[4/3] flex-none"
         />
-        <CardHeader className="px-3 pt-3">
+        <CardHeader className="mt-auto px-3 pt-3">
           <CardTitle className="truncate text-sm font-semibold">
             {asset.name}
           </CardTitle>

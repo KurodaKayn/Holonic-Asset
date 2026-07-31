@@ -11,6 +11,8 @@ export {
   useGenerateAnimationMutation,
   useSaveAssetRevisionMutation,
   useSuspenseRecordQuery,
+  editorModeForAssetKind,
+  isEditorRecordForAssetKind,
 } from "./editor";
 export {
   useAddAudioTrackMutation,
@@ -20,6 +22,32 @@ export {
   useUpdateAudioTrackMutation,
 } from "./audio";
 export type {
+  AssetGroup,
+  AssetGroupsByProject,
+  AssetKind,
+  AssetPreviewCrop,
+  AssetPreviewFrame,
+  AssetPreviewOffset,
+  AssetRevision,
+  CreatableAssetKind,
+  ProjectAsset,
+} from "./library";
+export type {
+  AudioEditorRecord,
+  CharacterEditorRecord,
+  EditorCanvasPosition,
+  EditorCharacterAnimation,
+  EditorCharacterAnimationClip,
+  EditorCharacterSpriteSheet,
+  EditorRecord,
+  EditorRecordForKind,
+  EditorSceneryLayer,
+  EditorTilesetCell,
+  EditorTilesetItem,
+  EditorUiComponent,
+  SceneryEditorRecord,
+  TilesetEditorRecord,
+  UiEditorRecord,
   GenerateAnimationInput,
   GenerateAnimationRequest,
   GenerateAnimationResult,
